@@ -1,7 +1,7 @@
 # AutoDock-GPU Container
-# Base: NVIDIA CUDA 12.4 on Ubuntu 22.04
+# Base: NVIDIA CUDA 12.4.1 on Ubuntu 22.04
 
-FROM nvidia/cuda:12.4-devel-ubuntu22.04 AS builder
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04 AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -19,22 +19,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Python dependencies
 RUN pip3 install --no-cache-dir numpy pandas polars pyarrow rdkit
 
-# Build AutoDock-GPU from source
+# Build AutoDock-GPU from source (uses Makefile, not CMake)
 WORKDIR /opt
 RUN git clone --branch develop --depth 1 https://github.com/ccsb-scripps/AutoDock-GPU.git
 WORKDIR /opt/AutoDock-GPU
-RUN mkdir build && cd build && \
-    cmake -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda .. && \
-    make -j$(nproc)
+# Set CUDA include path for the build
+ENV CUDA_PATH=/usr/local/cuda
+ENV CUDA_INCLUDE_PATH=/usr/local/cuda/include
+ENV CUDA_LIBRARY_PATH=/usr/local/cuda/lib64
+# Force gcc/g++ (not clang) for OpenMP support
+ENV CC=gcc
+ENV CXX=g++
+RUN make -j$(nproc) DEVICE=GPU GPU_INCLUDE_PATH=/usr/local/cuda/include GPU_LIBRARY_PATH=/usr/local/cuda/lib64
 
-# Build AutoDock-Vina as CPU fallback
+# Build AutoDock-Vina as CPU fallback (uses Makefile, not CMake)
 WORKDIR /opt
 RUN git clone --depth 1 https://github.com/ccsb-scripps/AutoDock-Vina.git
-WORKDIR /opt/AutoDock-Vina/build
-RUN cmake .. && make -j$(nproc)
+WORKDIR /opt/AutoDock-Vina/build/linux/release
+RUN make -j$(nproc)
 
 # --- Runtime Stage ---
-FROM nvidia/cuda:12.4-runtime-ubuntu22.04
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -54,8 +59,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binaries from builder
-COPY --from=builder /opt/AutoDock-GPU/build/autodock_gpu_128wi /usr/local/bin/autodock_gpu
-COPY --from=builder /opt/AutoDock-Vina/build/vina /usr/local/bin/vina
+COPY --from=builder /opt/AutoDock-GPU/bin/autodock_gpu_128wi /usr/local/bin/autodock_gpu
+COPY --from=builder /opt/AutoDock-Vina/build/linux/release/vina /usr/local/bin/vina
 
 # Install Python packages
 RUN pip3 install --no-cache-dir numpy pandas polars pyarrow rdkit
