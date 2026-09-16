@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Humanity Grid",
+  "version": "0.1.0",
+  "identifier": "org.humanity-grid.volunteer",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Humanity Grid",
+        "width": 480,
+        "height": 720,
+        "minWidth": 440,
+        "minHeight": 680,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": true,
+        "visible": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "macOSPrivateApi": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [],
+    "externalBin": [],
+    "copyright": "© 2026 Humanity Grid Contributors",
+    "category": "PublicDomain",
+    "shortDescription": "Donate your idle compute to scientific research",
+    "longDescription": "Humanity Grid Volunteer App - Turn your unused computer time into experiments aimed at important human problems.",
+    "deb": {
+      "depends": ["libwebkit2gtk-4.1-0", "libayatana-appindicator3-1", "librsvg2-common"]
+    },
+    "macOS": {
+      "entitlements": "entitlements.plist",
+      "exceptionDomain": "",
+      "frameworks": [],
+      "minimumSystemVersion": "11.0",
+      "signingIdentity": "-"
+    },
+    "windows": {
+      "certificateThumbprint": "",
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
+  },
+  "plugins": {
+    "opener": {}
+  }
+}

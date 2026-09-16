@@ -1,0 +1,73 @@
+[project]
+name = "experiment-engine"
+version = "0.1.0"
+description = "Job definitions, datasets, reproducibility, and provenance for Humanity Grid"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "NextEleven", email = "sean@nexteleven.com"}
+]
+keywords = ["science", "distributed-computing", "reproducibility", "provenance", "drug-discovery"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+dependencies = [
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "pydantic-yaml>=1.0",
+    "pyyaml>=6.0",
+    "rich>=13.9",
+    "loguru>=0.7",
+    "polars>=1.10",
+    "pyarrow>=17.0",
+    "duckdb>=1.1",
+    "sqlite-utils>=3.37",
+    "httpx>=0.27",
+    "tenacity>=8.5",
+    "hashlib",
+    "pathlib",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=6.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pre-commit>=3.8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+select = ["E", "F", "I", "UP", "W", "C4", "N", "D", "TRY", "PD", "PG", "PYI", "T20"]
+ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "TRY003"]
+fixable = ["F", "I", "UP", "W", "C4", "D", "TRY", "PD", "PG", "PYI", "T20"]
+format.quote-style = "double"
+format.indent-style = "space"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
