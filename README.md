@@ -1,3 +1,5 @@
+<img width="1168" height="784" alt="yxFNg" src="https://github.com/user-attachments/assets/0e5a3dad-498e-44cf-bc63-e43ea8605244" />
+
 # Humanity Grid
 
 **A global, open-source scientific computing network that continuously turns unused computers into experiments aimed at important human problems.**
