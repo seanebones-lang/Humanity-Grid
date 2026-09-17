@@ -98,6 +98,32 @@ Outlier Detection (IQR / Z-score)
 - **Bonus for GPU work** — multiplier based on GPU capability
 - **Team/school/company leaderboards** — aggregated from individual credits
 
+## Witness Integration (Evidence Records)
+
+Every validated result is deposited into a **Witness** instance as a typed,
+inspectable Record. This is the join that keeps the grid honest: raw scores
+stay **Observed**, consensus stays **Inferred** (with the observed nodes as
+explicit premises and a falsifier), and Research Scout prose stays
+**Generated** (`human_reviewed:false`) until a human promotes it.
+
+```
+scripts/witness_bridge.py
+  --witness http://127.0.0.1:8090
+  --job-id EXP-001 --hypothesis H-9182
+  --results-dir validation/output/results
+  --report validation/output/results/consensus.json
+  --domain cancer-screening --pdb 1KE7
+
+Observed  <- one ProvenanceNode per replicate (best-affinity, instrument=node)
+Inferred  <- consensus (premises = observed brains, falsifier attached)
+Generated <- scout hypothesis prose (model + prompt stored, human_reviewed:false)
+```
+
+The bridge uses only the Python standard library (`urllib`), so it runs on
+any volunteer node or orchestrator. It targets the Witness REST ingest
+endpoints (`POST /api/ingest/{observation|inference|generation}`), which were
+added so a stdlib client can deposit all three epistemic types.
+
 ## Architecture
 
 ```
