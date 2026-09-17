@@ -52,3 +52,8 @@ htmlcov/
 # Misc
 *.tgz
 .cache/
+# Validation: re-downloadable / large intermediate
+validation/data/
+validation/output/prep/1KE7.pdbqt
+*_docked.pdbqt
+*.smi

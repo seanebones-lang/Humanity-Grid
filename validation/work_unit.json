@@ -1,0 +1,24 @@
+{
+  "work_unit_id": "test-wu-001",
+  "job_id": "EXP-TEST",
+  "index": 0,
+  "parameters": {
+    "exhaustiveness": 16,
+    "num_modes": 10,
+    "energy_range": 3.0
+  },
+  "input_files": {
+    "protein": "1KE7.pdb",
+    "compounds": "dummy.sdf",
+    "config": "docking_config.txt"
+  },
+  "output_files": {
+    "results": "results.parquet",
+    "poses": "poses.pdbqt",
+    "metadata": "metadata.json"
+  },
+  "binding_site": {
+    "center": [25.1, 12.3, 18.7],
+    "radius": 12.0
+  }
+}
