@@ -27,7 +27,7 @@
 |------|-------|
 | **Protein** | CDK2 (Cyclin-dependent kinase 2) |
 | **PDB** | `1KE7` (2.0Å, CDK2 + inhibitor) |
-| **Binding site** | ATP pocket, center `[25.1, 12.3, 18.7]`, radius `12Å` |
+| **Binding site** | ATP pocket, center `[-9.11, 48.31, 11.80]` (LS3 co-ligand), radius `12Å` |
 | **Library** | 10,047 compounds: 47 known CDK2 actives (ChEMBL IC50 < 100 nM) + 10,000 decoys |
 | **Work units** | 11 (≈1000 compounds each, last = 47) |
 | **Redundancy** | 2× (22 total work unit executions) |
@@ -47,7 +47,7 @@ Every work unit execution MUST use:
   "energy_range": 3.0,
   "cpu": 1,
   "seed": 42,
-  "box_center": [25.1, 12.3, 18.7],
+  "box_center": [-9.11, 48.31, 11.80],
   "box_radius": 12.0
 }
 ```
@@ -171,7 +171,7 @@ python scripts/create_job.py \
   --name "CDK2 Infrastructure Validation" \
   --overrides "{
     \"inputs\": {
-      \"protein_structure\": {\"source\": \"pdb:1KE7\", \"sha256\": \"PROTEIN_SHA256\", \"binding_site\": {\"center\": [25.1, 12.3, 18.7], \"radius\": 12.0}},
+      \"protein_structure\": {\"source\": \"pdb:1KE7\", \"sha256\": \"PROTEIN_SHA256\", \"binding_site\": {\"center\": [-9.11, 48.31, 11.80], \"radius\": 12.0}},
       \"compound_library\": {\"source\": \"validation:cdk2_v1\", \"sha256\": \"LIBRARY_SHA256\", \"format\": \"sdf\"}
     },
     \"container\": {\"image\": \"humanity-grid/autodock-gpu:val-1\", \"sha256\": \"$CONTAINER_DIGEST\"},
