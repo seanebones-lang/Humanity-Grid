@@ -103,11 +103,13 @@ The implementation and the frozen local outputs are documented in
 [EXP-001-REPRODUCED.md](EXP-001-REPRODUCED.md). The committed consensus report
 is at `validation/output/results/consensus.json`.
 
-The raw receptor preparation, ligand PDBQT files, and result artifacts are not
-yet packaged as a versioned, checksummed public bundle. Therefore, a reviewer
-can inspect the current scripts and replay the Witness graph, but cannot yet
-perform a fully independent byte-for-byte rerun from a clone alone. Building
-that sealed package is the first Proof B readiness task.
+The raw receptor preparation, ligand PDBQT files, and result artifacts are now
+preserved as the versioned, checksummed
+[EXP-001 Proof A package](../proofs/EXP-001-v1/README.md). A reviewer can
+verify its digests, consensus report, and exported Witness graph offline from a
+clone. The package does not yet permit a fully independent re-execution because
+the execution environment, container digest, and independent input sourcing
+remain incomplete. Closing those gaps is the first Proof B readiness task.
 
 ## Troubleshooting
 

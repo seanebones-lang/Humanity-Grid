@@ -1,0 +1,224 @@
+{
+  "package": "Humanity Grid EXP-001 Proof A",
+  "version": "v1",
+  "scope": "Frozen local computational-infrastructure demonstration; not an independently reviewed scientific result.",
+  "witness_commit": "e69d64e987bf47c13e3624a99fac4c67e19cadc7",
+  "humanity_grid_commit": "89786c932767c02cfbaf69ae473caf5b6bb87e48",
+  "artifacts": [
+    {
+      "path": "inputs/1KE7.pdb",
+      "bytes": 226557,
+      "sha256": "cffac73281d4085f71cfce80489832d95cec05642fd415bd73570e8664e19352"
+    },
+    {
+      "path": "inputs/1KE7_rigid.pdbqt",
+      "bytes": 6428387,
+      "sha256": "5979bb525714a581169f9cd9a40abccbd6938c4acc4e40cf669700a7e88825e8"
+    },
+    {
+      "path": "outputs/consensus.json",
+      "bytes": 410,
+      "sha256": "921bb97078c55c4fedc70e6c4b4f1f447c7a5f1eaa10ad250571f6385e5dd116"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL1234501.pdbqt",
+      "bytes": 2945,
+      "sha256": "28b73852f5780cbaeb1fa583af04b7f63125af2aa6e336d53b290fb9893c8682"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL1234501.smi",
+      "bytes": 35,
+      "sha256": "0b1af88fb82f7aac3f6722f4237d00c331b6cc1d354e156c9c420c1071ae7335"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL1234501_docked.pdbqt",
+      "bytes": 3164,
+      "sha256": "657ece97126f0c37e108243a02297b3bcd26c1c14019cf8d6387f471eda06b30"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL2106406.pdbqt",
+      "bytes": 2282,
+      "sha256": "a3f35d1807987721323067463ecc9ea941ab5995cd6ffee22c154700d9158d0a"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL2106406.smi",
+      "bytes": 34,
+      "sha256": "094d35c164127901eb740316b92e4e3acdc5679c8946ebd682964014bc0c92e8"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL2106406_docked.pdbqt",
+      "bytes": 2501,
+      "sha256": "f5ad55bc22f5325361202ffc795187985bdf319a910ea623520ef3e96c117fd3"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL331829.pdbqt",
+      "bytes": 2777,
+      "sha256": "8a6b4935f7ae873f8e7aaabd3848959f534b1a3f9734bab4b46668165a166d03"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL331829.smi",
+      "bytes": 44,
+      "sha256": "4a9a8523ef404629d7a1705d4e1c5fe1cd1d7bad55b2aa85163daeaf75bac674"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL331829_docked.pdbqt",
+      "bytes": 2996,
+      "sha256": "0db8368d889d77e9add3494e17611dabe46fca855d65191c4db8b02214e09131"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL363112.pdbqt",
+      "bytes": 3027,
+      "sha256": "5a84942df12d1a353f2607826ef9cd94969573083b55146e4f68cc7f8efe7beb"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL363112.smi",
+      "bytes": 38,
+      "sha256": "5308b5060733ebde386e8b3d10bd74305376cea2f73b9976111ae37f3e3e34ad"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL363112_docked.pdbqt",
+      "bytes": 3246,
+      "sha256": "03adc097dc2c907f36ba56699d6ffa4dc1ecdaf7a433874c363daf5629b6c8e9"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL434844.pdbqt",
+      "bytes": 2216,
+      "sha256": "d5f9186c7823d0bf656e897689da5f83ece78585382eb919b9a458e44a408b4f"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL434844.smi",
+      "bytes": 31,
+      "sha256": "45e885e1c7fb12cf34e040effb716636bd5d3cd58705410f7a334e967ee3fa65"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL434844_docked.pdbqt",
+      "bytes": 2435,
+      "sha256": "b27b89a778c7ef4fe7b14fa0d06841b296f9d03f7146d8133ec4f93f338d0827"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL495686.pdbqt",
+      "bytes": 2584,
+      "sha256": "fa47d710376889b09449bc93a46eaf5bc4c97ac6ccc6578c8bf8ecbb7f543083"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL495686.smi",
+      "bytes": 42,
+      "sha256": "fc036a8c00920799a23ea9f0a26ff9d880b18c0d58f184759532ce6fa40ea829"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/CHEMBL495686_docked.pdbqt",
+      "bytes": 2803,
+      "sha256": "74c9191bca4f1b33b831524f0eeedd9b81e68f01df0006cd4d430e708bda6a8f"
+    },
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/results.parquet",
+      "bytes": 1652,
+      "sha256": "c51eb23baebf55f67c2ce37a6222ee7141e6f2441de399343fad1323cb7693d8"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL1234501.pdbqt",
+      "bytes": 2945,
+      "sha256": "0b564e2d86844872d570b94de8859855d3b1f4276684cc110f7a1444ef18c6f9"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL1234501.smi",
+      "bytes": 35,
+      "sha256": "0b1af88fb82f7aac3f6722f4237d00c331b6cc1d354e156c9c420c1071ae7335"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL1234501_docked.pdbqt",
+      "bytes": 3164,
+      "sha256": "cbc0a141dc041a9cf1784bf94548166fe9a851049dd4c7db520bff886b08279b"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL2106406.pdbqt",
+      "bytes": 2282,
+      "sha256": "37606c9d179b1d83e9339ed604f5651c1c7990fe3da42f5a1ba83e5f9e2c0ef3"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL2106406.smi",
+      "bytes": 34,
+      "sha256": "094d35c164127901eb740316b92e4e3acdc5679c8946ebd682964014bc0c92e8"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL2106406_docked.pdbqt",
+      "bytes": 2501,
+      "sha256": "201e85300be4a296302e669009b6f7b305144b029b93f65f1f5168855a7f3180"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL331829.pdbqt",
+      "bytes": 2777,
+      "sha256": "442a094be2c30fd9069752913ca77c1fa75dd599cc0eba040010984f2bc92e32"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL331829.smi",
+      "bytes": 44,
+      "sha256": "4a9a8523ef404629d7a1705d4e1c5fe1cd1d7bad55b2aa85163daeaf75bac674"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL331829_docked.pdbqt",
+      "bytes": 2996,
+      "sha256": "0288877d973ce34dc5ad4e6c7e9f080c37357d4b6ad3756e8878693cafe294d3"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL363112.pdbqt",
+      "bytes": 3027,
+      "sha256": "9791737675eff117b442d48f56bd9bc48b54ea11e867062b19c9a2493a29db32"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL363112.smi",
+      "bytes": 38,
+      "sha256": "5308b5060733ebde386e8b3d10bd74305376cea2f73b9976111ae37f3e3e34ad"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL363112_docked.pdbqt",
+      "bytes": 3246,
+      "sha256": "32f00ff623ea3cd8b67ed27310d42ed41b334010f6bce62d8d2329b91d38eaa8"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL434844.pdbqt",
+      "bytes": 2216,
+      "sha256": "cf78361bea45afce45348cc01174c318a64e4b8fdbd8dc4efa5ca3ac5a73cf00"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL434844.smi",
+      "bytes": 31,
+      "sha256": "45e885e1c7fb12cf34e040effb716636bd5d3cd58705410f7a334e967ee3fa65"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL434844_docked.pdbqt",
+      "bytes": 2435,
+      "sha256": "0292c63fe6c1d88503d8e31bcab0238d18688cb2532a36a5ff1b9090e49a8708"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL495686.pdbqt",
+      "bytes": 2584,
+      "sha256": "15d607f6bc9749923c9bf722ace9f862d1578896450711880c8ce1ef366969bd"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL495686.smi",
+      "bytes": 42,
+      "sha256": "fc036a8c00920799a23ea9f0a26ff9d880b18c0d58f184759532ce6fa40ea829"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/CHEMBL495686_docked.pdbqt",
+      "bytes": 2803,
+      "sha256": "6d93000b19f0b853a2465eda3aaafb07ebd7769167244ecd5e63084e06e6edf9"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/results.parquet",
+      "bytes": 1652,
+      "sha256": "7ce9ac3c8354ec56101e8005394acd2aa26f22b7d898e2dd9980abcde5c58c23"
+    },
+    {
+      "path": "outputs/witness/proof-a-review.db",
+      "bytes": 94208,
+      "sha256": "b9e8d21f5222788fa3efed23a28ba769987eb43d9f9fca021a5cd5387f7985e6"
+    },
+    {
+      "path": "outputs/witness/records.json",
+      "bytes": 23379,
+      "sha256": "82fc81a696f5eaa2326a0f395448f2304969be0823037b8b47ea0882cb5b0649"
+    }
+  ]
+}

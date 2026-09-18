@@ -25,6 +25,9 @@ Then follow the two-terminal commands in
 guide states exactly what the replay verifies, what it does not verify, how to
 inspect the result, and how to report a failure.
 
+The frozen local artifacts and Witness record snapshot are also available in the
+[checksummed EXP-001 Proof A package](proofs/EXP-001-v1/README.md).
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.80+-orange.svg)](https://www.rust-lang.org/)
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/)
