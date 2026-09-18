@@ -10,13 +10,15 @@ Ingests:
 Uses Witness REST ingest endpoints. Detects existing records to avoid duplication.
 """
 
+import argparse
 import json
+import os
 import requests
 import sys
 from datetime import datetime, timezone
 from typing import Optional
 
-WITNESS_API = "http://127.0.0.1:8080"
+DEFAULT_WITNESS_API = "http://127.0.0.1:8080"
 
 # EXP-001 data
 COMPOUNDS = [
@@ -51,11 +53,11 @@ SCOUT_AUTHOR = {
     "author_type": "model",
 }
 
-def check_existing_observed(compound_id: str, seed: int) -> Optional[str]:
+def check_existing_observed(witness_api: str, compound_id: str, seed: int) -> Optional[str]:
     """Check if an observed record for this compound+seed already exists."""
     try:
         resp = requests.get(
-            f"{WITNESS_API}/api/nodes",
+            f"{witness_api}/api/nodes",
             params={"label": compound_id, "limit": 5, "type": "observed"},
             timeout=10
         )
@@ -69,33 +71,29 @@ def check_existing_observed(compound_id: str, seed: int) -> Optional[str]:
         print(f"Warning: Could not check existing records: {e}")
     return None
 
-def ingest_observation(compound_id: str, seed: int, affinity: float, timestamp: str, label: str) -> str:
+def ingest_observation(witness_api: str, compound_id: str, seed: int, affinity: float, timestamp: str, label: str) -> str:
     """Ingest a single observed docking measurement."""
-    existing = check_existing_observed(compound_id, seed)
+    existing = check_existing_observed(witness_api, compound_id, seed)
     if existing:
         print(f"  [REUSE] {compound_id} seed={seed} -> {existing}")
         return existing
 
     payload = {
         "quantity": "docking_affinity",
-        "value_numeric": affinity,
+        "value": str(affinity),
         "unit": "kcal/mol",
-        "station_id": "1KE7",
-        "location_desc": "CDK2 binding site (PDB 1KE7, LS3 pocket)",
         "measured_at": timestamp,
         "instrument_id": "autodock-vina-1.2.5",
         "instrument_name": "AutoDock Vina",
-        "instrument_model": "1.2.5",
-        "calibration_ref": f"seed={seed},exhaustiveness=8,cpu=4",
         "author_id": INSTRUMENT_AUTHOR["author_id"],
         "author_name": INSTRUMENT_AUTHOR["author_name"],
         "author_type": INSTRUMENT_AUTHOR["author_type"],
         "labels": ["EXP-001", label, f"seed-{seed}", "cdk2", "1KE7", compound_id],
         "domain": "computational-chemistry",
-        "source_uri": f"file:///Desktop/humanity-grid/validation/output/results/{label}/cdk2-wu-001/results.parquet",
+        "source_uri": f"humanity-grid://EXP-001/{label}/cdk2-wu-001/results.parquet",
     }
 
-    resp = requests.post(f"{WITNESS_API}/api/ingest/observation", json=payload, timeout=30)
+    resp = requests.post(f"{witness_api}/api/ingest/observation", json=payload, timeout=30)
     if not resp.ok:
         raise RuntimeError(f"Failed to ingest observation: {resp.status_code} {resp.text}")
     
@@ -103,11 +101,11 @@ def ingest_observation(compound_id: str, seed: int, affinity: float, timestamp: 
     print(f"  [CREATE] {compound_id} seed={seed} -> {result['id']} (CID: {result['cid'][:16]}...)")
     return result["id"]
 
-def check_existing_inference(label: str) -> Optional[str]:
+def check_existing_inference(witness_api: str, label: str) -> Optional[str]:
     """Check if an inferred record with this label exists."""
     try:
         resp = requests.get(
-            f"{WITNESS_API}/api/nodes",
+            f"{witness_api}/api/nodes",
             params={"label": label, "limit": 5, "type": "inferred"},
             timeout=10
         )
@@ -121,9 +119,9 @@ def check_existing_inference(label: str) -> Optional[str]:
         print(f"Warning: Could not check existing inference: {e}")
     return None
 
-def ingest_consensus_inference(observed_ids: list) -> str:
+def ingest_consensus_inference(witness_api: str, observed_ids: list[str]) -> str:
     """Ingest the consensus inference."""
-    existing = check_existing_inference("consensus")
+    existing = check_existing_inference(witness_api, "consensus")
     if existing:
         print(f"  [REUSE] consensus inference -> {existing}")
         return existing
@@ -131,44 +129,27 @@ def ingest_consensus_inference(observed_ids: list) -> str:
     payload = {
         "premises": observed_ids,
         "methodology": "Pearson correlation between two independent AutoDock Vina replicates (seeds 101 and 202) on six known CDK2 actives. Consensus threshold r >= 0.80. Outlier detection via IQR on per-compound replicate differences.",
-        "model_id": "numpy/scipy",
-        "model_version": "latest",
-        "parameters": {
-            "metric": "pearson_r",
-            "threshold": 0.80,
-            "outlier_method": "iqr",
-            "n_compounds": 6,
-            "n_replicates": 2,
-            "pearson_r": 0.885,
-            "consensus": "PASS",
-            "outlier_compound": "CHEMBL495686",
-            "outlier_delta": 0.570,
-            "iqr_upper_bound": 0.369
-        },
-        "claim_statement": "The two independent Vina replicates (seeds 101, 202) produce correlated docking scores (r = 0.885) exceeding the consensus threshold (r >= 0.80), indicating reproducible binding affinity predictions for six known CDK2 inhibitors.",
-        "claim_type": "Correlative",
-        "claim_scope": "Specific",
+        "claim": "The two specified Vina runs (seeds 101 and 202) have Pearson r = 0.885 across six docking scores, exceeding the predeclared r >= 0.80 agreement threshold. This establishes agreement between those runs only; it does not establish biological efficacy or predictive validity.",
+        "claim_type": "correlative",
+        "claim_scope": "specific",
         "falsifiers": [
             {
                 "description": "A third independent Vina replicate with a different seed produces docking scores that correlate with the first two replicates at r < 0.80",
                 "measurement_type": "docking_affinity",
-                "location": "CDK2 binding site (PDB 1KE7, LS3 pocket)",
                 "timeframe": "Any future replication",
-                "status": "Pending"
+                "status": "pending"
             },
             {
                 "description": "Experimental binding assays (ITC, SPR) for the six compounds contradict the predicted rank order from the consensus docking scores",
                 "measurement_type": "experimental_binding_affinity",
-                "location": "Wet lab",
                 "timeframe": "When experimental data available",
-                "status": "Pending"
+                "status": "pending"
             },
             {
                 "description": "Using a different binding-site center (e.g., the earlier incorrect fabricated center) yields r < 0.80 or reversed rank order",
                 "measurement_type": "docking_affinity",
-                "location": "CDK2 binding site with incorrect center",
                 "timeframe": "Already observed in failed attempt",
-                "status": "CompletedFalsified"
+                "status": "completed-falsified"
             }
         ],
         "inference_uncertainty": 0.115,
@@ -177,10 +158,10 @@ def ingest_consensus_inference(observed_ids: list) -> str:
         "author_type": ANALYST_AUTHOR["author_type"],
         "labels": ["EXP-001", "consensus", "validation", "pearson-r=0.885", "threshold=0.80", "passed", "outliers=1"],
         "domain": "computational-chemistry",
-        "source_uri": "humanity-grid/validation/output/results/consensus.json",
+        "source_uri": "humanity-grid://EXP-001/validation/output/results/consensus.json",
     }
 
-    resp = requests.post(f"{WITNESS_API}/api/ingest/inference", json=payload, timeout=30)
+    resp = requests.post(f"{witness_api}/api/ingest/inference", json=payload, timeout=30)
     if not resp.ok:
         raise RuntimeError(f"Failed to ingest consensus inference: {resp.status_code} {resp.text}")
     
@@ -188,9 +169,9 @@ def ingest_consensus_inference(observed_ids: list) -> str:
     print(f"  [CREATE] consensus inference -> {result['id']} (CID: {result['cid'][:16]}...)")
     return result["id"]
 
-def ingest_failed_attempt_inference() -> str:
+def ingest_failed_attempt_inference(witness_api: str) -> str:
     """Ingest the failed attempt inference (provenance)."""
-    existing = check_existing_inference("failed-attempt")
+    existing = check_existing_inference(witness_api, "failed-attempt")
     if existing:
         print(f"  [REUSE] failed attempt inference -> {existing}")
         return existing
@@ -198,18 +179,15 @@ def ingest_failed_attempt_inference() -> str:
     payload = {
         "premises": [],
         "methodology": "AutoDock Vina with an incorrect/fabricated binding-site center (not the LS3 co-crystallized pocket). Produced near-zero/meaningless docking scores with no correlation to known actives. The assumption was challenged by comparing to the actual LS3 pocket coordinates from the 1KE7 structure. Experiment was rerun with corrected center.",
-        "model_id": None,
-        "parameters": {"center_used": "incorrect/fabricated", "result": "meaningless_scores"},
-        "claim_statement": "An earlier docking attempt using an incorrect binding-site center produced invalid results. The error was identified and corrected by using the actual LS3 co-crystallized ligand pocket coordinates from PDB 1KE7.",
-        "claim_type": "Descriptive",
-        "claim_scope": "Specific",
+        "claim": "An earlier docking attempt used an incorrect binding-site center and was superseded after comparison with the LS3 co-crystallized ligand pocket in PDB 1KE7.",
+        "claim_type": "descriptive",
+        "claim_scope": "specific",
         "falsifiers": [
             {
                 "description": "Evidence that the original incorrect center was actually valid for CDK2 docking",
                 "measurement_type": "structural_biology",
-                "location": "PDB 1KE7",
                 "timeframe": "Historical",
-                "status": "CompletedFalsified"
+                "status": "completed-falsified"
             }
         ],
         "inference_uncertainty": None,
@@ -218,10 +196,10 @@ def ingest_failed_attempt_inference() -> str:
         "author_type": ANALYST_AUTHOR["author_type"],
         "labels": ["EXP-001", "failed-attempt", "provenance", "correction", "binding-site-error"],
         "domain": "computational-chemistry",
-        "source_uri": "humanity-grid/validation/output/results/consensus.json",
+        "source_uri": "humanity-grid://EXP-001/validation/output/results/consensus.json",
     }
 
-    resp = requests.post(f"{WITNESS_API}/api/ingest/inference", json=payload, timeout=30)
+    resp = requests.post(f"{witness_api}/api/ingest/inference", json=payload, timeout=30)
     if not resp.ok:
         raise RuntimeError(f"Failed to ingest failed attempt inference: {resp.status_code} {resp.text}")
     
@@ -229,11 +207,11 @@ def ingest_failed_attempt_inference() -> str:
     print(f"  [CREATE] failed attempt inference -> {result['id']} (CID: {result['cid'][:16]}...)")
     return result["id"]
 
-def check_existing_generation() -> Optional[str]:
+def check_existing_generation(witness_api: str) -> Optional[str]:
     """Check if the hypothesis generation already exists."""
     try:
         resp = requests.get(
-            f"{WITNESS_API}/api/nodes",
+            f"{witness_api}/api/nodes",
             params={"label": "hypothesis", "limit": 5, "type": "generated"},
             timeout=10
         )
@@ -247,30 +225,27 @@ def check_existing_generation() -> Optional[str]:
         print(f"Warning: Could not check existing generation: {e}")
     return None
 
-def ingest_generation() -> str:
+def ingest_generation(witness_api: str) -> str:
     """Ingest the Research Scout hypothesis."""
-    existing = check_existing_generation()
+    existing = check_existing_generation(witness_api)
     if existing:
         print(f"  [REUSE] hypothesis generation -> {existing}")
         return existing
 
     payload = {
-        "model_id": "microsoft/phi-3-mini-4k-instruct",
+        "content": "Hypothesis: six known CDK2 inhibitors from ChEMBL will show agreement between two specified AutoDock Vina runs using the LS3 pocket in PDB 1KE7.",
+        "generator": "microsoft/phi-3-mini-4k-instruct",
         "model_version": "phi-3-mini-4k-instruct",
-        "model_hash": None,
-        "model_training_data_ref": "unknown",
         "prompt": "Generate a testable hypothesis for CDK2 inhibition validation using known actives from ChEMBL",
-        "parameters": {"temperature": 0.7, "max_tokens": 500},
         "human_reviewed": False,
         "author_id": SCOUT_AUTHOR["author_id"],
         "author_name": SCOUT_AUTHOR["author_name"],
-        "author_type": SCOUT_AUTHOR["author_type"],
         "labels": ["EXP-001", "hypothesis", "research-scout", "human_reviewed:false"],
         "domain": "computational-chemistry",
-        "source_uri": "humanity-grid/src/research-scout",
+        "source_uri": "humanity-grid://EXP-001/research-scout",
     }
 
-    resp = requests.post(f"{WITNESS_API}/api/ingest/generation", json=payload, timeout=30)
+    resp = requests.post(f"{witness_api}/api/ingest/generation", json=payload, timeout=30)
     if not resp.ok:
         raise RuntimeError(f"Failed to ingest generation: {resp.status_code} {resp.text}")
     
@@ -278,22 +253,22 @@ def ingest_generation() -> str:
     print(f"  [CREATE] hypothesis generation -> {result['id']} (CID: {result['cid'][:16]}...)")
     return result["id"]
 
-def verify_ingestion():
+def verify_ingestion(witness_api: str) -> bool:
     """Verify all EXP-001 records are in Witness."""
     print("\n=== VERIFICATION ===")
     
     # Count observed
-    resp = requests.get(f"{WITNESS_API}/api/nodes", params={"label": "EXP-001", "type": "observed", "limit": 50})
+    resp = requests.get(f"{witness_api}/api/nodes", params={"label": "EXP-001", "type": "observed", "limit": 50})
     observed = resp.json()["nodes"] if resp.ok else []
     print(f"Observed EXP-001 records: {len(observed)} (expected 12)")
     
     # Count inferred
-    resp = requests.get(f"{WITNESS_API}/api/nodes", params={"label": "EXP-001", "type": "inferred", "limit": 50})
+    resp = requests.get(f"{witness_api}/api/nodes", params={"label": "EXP-001", "type": "inferred", "limit": 50})
     inferred = resp.json()["nodes"] if resp.ok else []
     print(f"Inferred EXP-001 records: {len(inferred)} (expected 2)")
     
     # Count generated
-    resp = requests.get(f"{WITNESS_API}/api/nodes", params={"label": "EXP-001", "type": "generated", "limit": 50})
+    resp = requests.get(f"{witness_api}/api/nodes", params={"label": "EXP-001", "type": "generated", "limit": 50})
     generated = resp.json()["nodes"] if resp.ok else []
     print(f"Generated EXP-001 records: {len(generated)} (expected 1)")
     
@@ -313,25 +288,34 @@ def verify_ingestion():
             break
     
     # Check premises
-    for inf in inferred:
-        parents = node.get("parents", [])
-        print(f"Inference {inf['id'][:8]}... has {len(parents)} premises")
+    consensus = next((inf for inf in inferred if "consensus" in inf.get("labels", [])), None)
+    if consensus:
+        parents = consensus.get("parents", [])
+        print(f"Inference {consensus['id'][:8]}... has {len(parents)} premises")
+
+    if consensus and len(consensus.get("parents", [])) != 12:
+        print("✗ Consensus inference does not link all 12 observed records")
+        return False
     
     return len(observed) == 12 and len(inferred) == 2 and len(generated) == 1
 
-def main():
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Idempotently deposit and verify the frozen EXP-001 Proof A record in Witness.")
+    parser.add_argument("--witness", default=os.environ.get("WITNESS_API", DEFAULT_WITNESS_API), help="Witness API base URL (default: %(default)s)")
+    args = parser.parse_args()
+    witness_api = args.witness.rstrip("/")
     print("=== EXP-001 Idempotent Witness Ingestion ===\n")
     
     # Check server
     try:
-        resp = requests.get(f"{WITNESS_API}/health", timeout=5)
+        resp = requests.get(f"{witness_api}/health", timeout=5)
         if not resp.ok:
             print(f"Witness API not healthy: {resp.status_code}")
             sys.exit(1)
     except Exception as e:
-        print(f"Cannot reach Witness API at {WITNESS_API}: {e}")
-        print("Start it with: cd ~/Witness && DATABASE_URL=sqlite://witness.db ./target/release/witness-api")
-        sys.exit(1)
+        print(f"Cannot reach Witness API at {witness_api}: {e}")
+        print("Start Witness first; see Witness INSTALL.md for the one-command local server.")
+        return 1
     
     print("Witness API reachable.\n")
     
@@ -341,22 +325,22 @@ def main():
     for compound_id, r1, r2 in COMPOUNDS:
         for rep in REPLICATES:
             affinity = r1 if rep["seed"] == 101 else r2
-            oid = ingest_observation(compound_id, rep["seed"], affinity, rep["timestamp"], rep["label"])
+            oid = ingest_observation(witness_api, compound_id, rep["seed"], affinity, rep["timestamp"], rep["label"])
             observed_ids.append(oid)
     
     # 2. Ingest 2 Inferred records
     print("\n2. Ingesting Inferred records...")
-    consensus_id = ingest_consensus_inference(observed_ids)
-    failed_id = ingest_failed_attempt_inference()
+    consensus_id = ingest_consensus_inference(witness_api, observed_ids)
+    failed_id = ingest_failed_attempt_inference(witness_api)
     inferred_ids = [consensus_id, failed_id]
     
     # 3. Ingest 1 Generated record
     print("\n3. Ingesting Generated record...")
-    hypothesis_id = ingest_generation()
+    hypothesis_id = ingest_generation(witness_api)
     
     # 4. Verify
     print("\n4. Verifying ingestion...")
-    success = verify_ingestion()
+    success = verify_ingestion(witness_api)
     
     print("\n=== SUMMARY ===")
     print(f"Observed:  {len(observed_ids)} records")
@@ -366,10 +350,10 @@ def main():
     
     if success:
         print("\n✓ All records verified successfully!")
-        sys.exit(0)
+        return 0
     else:
         print("\n✗ Verification failed")
-        sys.exit(1)
+        return 1
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

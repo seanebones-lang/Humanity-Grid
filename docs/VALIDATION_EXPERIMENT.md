@@ -1,4 +1,14 @@
-# Validation Experiment: CDK2 Virtual Screening
+# Archived design draft: large-scale CDK2 virtual screening
+
+> **Do not use this document as an installation guide, evidence package, or
+> statement of current implementation.** It describes a proposed future Proof B
+> style screen involving AutoDock-GPU, 10,047 compounds, attested volunteer
+> nodes, and a `r >= 0.95` rule. Those controls are not implemented by the
+> current Witness protocol or the frozen EXP-001 demonstration.
+>
+> For the actual supported review path, including the six-compound AutoDock Vina
+> CPU demonstration, its `r >= 0.80` agreement rule, local record replay, and
+> known limitations, read [Proof A: scientific review and local replay](PROOF_A_REVIEW.md).
 
 **Goal**: Prove the pipeline infrastructure works by demonstrating reproducible, content-addressed, consensus-validated compute on a known target.
 

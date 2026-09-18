@@ -4,6 +4,27 @@
 
 **A global, open-source scientific computing network that continuously turns unused computers into experiments aimed at important human problems.**
 
+> **Current review status:** Humanity Grid is pre-alpha. The supported scientific
+> review path is the frozen local EXP-001 infrastructure demonstration, not a
+> public volunteer network or drug-discovery result. Start with
+> [Proof A: scientific review and local replay](docs/PROOF_A_REVIEW.md).
+
+## Start here
+
+There is not yet a supported installer for a volunteer-computing platform. The
+supported path for researchers and technical reviewers is a local, loopback-only
+Proof A replay that verifies the Grid-to-Witness record contract:
+
+```bash
+git clone https://github.com/seanebones-lang/witness.git && \
+git clone https://github.com/seanebones-lang/Humanity-Grid.git
+```
+
+Then follow the two-terminal commands in
+[Proof A: scientific review and local replay](docs/PROOF_A_REVIEW.md). The
+guide states exactly what the replay verifies, what it does not verify, how to
+inspect the result, and how to report a failure.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.80+-orange.svg)](https://www.rust-lang.org/)
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/)
@@ -34,32 +55,20 @@ Humanity Grid
 
 ---
 
-## Quick Start (Development)
+## Component development status
 
-### Prerequisites
+The repository contains early component scaffolds for compute brokerage,
+experiment definition, research scouting, open results, and a volunteer app.
+They are not one installed platform and must not be represented as an operating
+global compute network.
 
-- **Rust** 1.80+ (for Volunteer App)
-- **Python** 3.12+ (for Research Scout, Experiment Engine, Scientific Pipeline)
-- **Docker** (for containerized workloads)
-- **BOINC client** (for local testing)
+Each Python component has its own `pyproject.toml`; there is no repository-root
+`requirements.txt`, unified dependency lock, provisioned BOINC control plane,
+or release artifact yet. Use the component documentation only for focused
+development work after completing the Proof A review path.
 
-### Install Dependencies
-
-```bash
-# Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Python (via uv - recommended)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv venv
-source .venv/bin/activate
-uv pip install -r requirements.txt
-
-# Or with pip
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+See [Proof A: scientific review and local replay](docs/PROOF_A_REVIEW.md) for
+the only currently supported installation and use instructions.
 
 ### Project Structure
 
