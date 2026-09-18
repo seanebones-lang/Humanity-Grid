@@ -23,6 +23,11 @@ It deliberately does not recompute docking, parse Parquet result values, verify
 the content identifiers from the Rust implementation, or infer scientific
 validity. Those are distinct tasks for a future independently reviewed Proof B.
 
+Before reusing an input or output, read the file-level
+[artifact-rights and source boundary](LICENSES.md). The repository's MIT
+license does not silently relicense source records, upstream data, or other
+third-party material included for review.
+
 ## Contents
 
 | Path | Role |

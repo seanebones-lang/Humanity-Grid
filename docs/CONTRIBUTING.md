@@ -2,6 +2,12 @@
 
 Thank you for helping build a global scientific computing network. This document covers how to contribute code, report issues, and participate in the community.
 
+> **Current status:** Humanity Grid is pre-alpha. The supported reviewer path is
+> the frozen local EXP-001 demonstration in
+> [Proof A: scientific review and local replay](PROOF_A_REVIEW.md). The broader
+> platform described below is design and scaffold work, not an operating public
+> volunteer-computing service.
+
 ## Code of Conduct
 
 We follow the [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). Be respectful, inclusive, and constructive.
@@ -102,8 +108,12 @@ Each `src/*` component is an independent Python package (or Rust for volunteer-a
 3. **Write tests** — new code needs coverage; bug fixes need regression tests
 4. **Run linters** — `ruff check . && mypy .` (Python), `cargo clippy` (Rust), `npm run lint` (TS)
 5. **Update docs** — if you change behavior, update relevant `.md` files
-6. **Commit** — conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`
+6. **Commit** — conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, and a DCO sign-off: `git commit -s -m "..."`
 7. **Push and PR** — fill the PR template, link related issues
+
+Every commit in a pull request must carry a DCO sign-off. Read
+[CONTRIBUTOR-PROVENANCE.md](../CONTRIBUTOR-PROVENANCE.md) before submitting
+code, data, or generated artifacts.
 
 ### PR Checklist
 
@@ -170,14 +180,15 @@ Use GitHub Issues with these templates:
 - **Bug Report**: Steps to reproduce, expected vs actual, logs, environment
 - **Feature Request**: Use case, alignment with SPEC.md, implementation sketch
 - **Science Question**: Target, literature, proposed computation, compute estimate
-- **Security**: Email security@humanity-grid.org (do not file public issue)
+- **Security**: Do not file sensitive security details in a public issue. The
+  project does not yet publish a private disclosure channel; contact the project
+  owner through the GitHub profile until one is established.
 
 ## Community
 
 - **Discussions**: GitHub Discussions for questions, ideas, science talk
-- **Discord**: [invite link TBD] — real-time chat for contributors
-- **Office Hours**: Monthly video call (announced in Discussions)
-- **Mailing List**: `humanity-grid-announce@googlegroups.com` (low traffic)
+- **Discord, office hours, and mailing list**: These channels have not yet been
+  provisioned. Do not represent them as available.
 
 ## Recognition
 
@@ -188,8 +199,11 @@ Contributors are listed in:
 
 ## License
 
-By contributing, you agree your contributions are licensed under the MIT License (see `LICENSE`).
+By contributing with the required DCO sign-off, you license your original
+contribution under the MIT License (see `LICENSE`). Do not add third-party
+materials without documenting their source and terms. See
+[LICENSE-POLICY.md](../LICENSE-POLICY.md).
 
 ---
 
-**Questions?** Open a Discussion or email `contrib@humanity-grid.org`.
+**Questions?** Open a GitHub Discussion or issue.
