@@ -28,6 +28,10 @@ inspect the result, and how to report a failure.
 The frozen local artifacts and Witness record snapshot are also available in the
 [checksummed EXP-001 Proof A package](proofs/EXP-001-v1/README.md).
 
+Independent reviewers should use the [external review guide](docs/EXTERNAL_REVIEW.md).
+The current invitation is to inspect and criticize the frozen proof, then help
+define an independently designed Proof B — not to endorse a scientific result.
+
 For attribution, reuse, and packaged-artifact boundaries, see
 [CITATION.cff](CITATION.cff), [NOTICE](NOTICE),
 [LICENSE-POLICY.md](LICENSE-POLICY.md), and
