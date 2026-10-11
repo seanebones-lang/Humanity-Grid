@@ -7,13 +7,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from experiment_engine.jobs.spec import JobSpec, WorkUnit
+from experiment_engine.jobs.spec import JobSpec, SplitStrategy
 
 
 def main():
@@ -25,6 +24,13 @@ def main():
 
     # Load job spec
     job = JobSpec.from_yaml(args.job_spec)
+
+    if args.library_path is not None:
+        parser.error(
+            "Library materialization is not implemented; this command emits configurations only"
+        )
+    if job.work_units.split_strategy != SplitStrategy.SEQUENTIAL:
+        parser.error("Only sequential configuration ranges are implemented")
 
     # Calculate work unit splits
     total_compounds = job.work_units.total * job.work_units.compounds_per_unit
@@ -45,9 +51,10 @@ def main():
     # Default docking parameters
     default_params = {"exhaustiveness": 16, "num_modes": 10, "energy_range": 3.0}
     docking_params = default_params.copy()
-    if config_input and config_input.format == "json":
-        # If params are embedded in the input, they'd be parsed separately
-        pass
+    if config_input:
+        if config_input.format == "json" and not config_input.parameters:
+            parser.error("External parameter files are not loaded; provide explicit parameters")
+        docking_params.update(config_input.parameters)
 
     for i in range(n_units):
         start = i * job.work_units.compounds_per_unit
@@ -57,6 +64,9 @@ def main():
         wu_config = {
             "work_unit_id": f"{job.job_id}-WU-{i:04d}",
             "job_id": job.job_id,
+            "job_spec_hash": job.provenance.spec_hash,
+            "input_hashes": {name: spec.sha256 for name, spec in job.inputs.items()},
+            "container": job.container.model_dump(mode="json"),
             "index": i,
             "compound_range": [start, end - 1],
             "parameters": docking_params,
@@ -70,7 +80,9 @@ def main():
                 "poses": f"poses_{i:04d}.pdbqt",
                 "metadata": f"metadata_{i:04d}.json",
             },
-            "binding_site": protein_input.binding_site if protein_input and protein_input.binding_site else {},
+            "binding_site": protein_input.binding_site
+            if protein_input and protein_input.binding_site
+            else {},
         }
 
         output_file = args.output / f"wu_{i:04d}.json"

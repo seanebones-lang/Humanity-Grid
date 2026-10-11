@@ -49,9 +49,9 @@ build-backend = "hatchling.build"
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-select = ["E", "F", "I", "UP", "W", "C4", "N", "D", "TRY", "PD", "PG", "PYI", "T20"]
+select = ["E", "F", "I", "UP", "W", "C4", "N", "D", "TRY", "PD", "PGH", "PYI", "T20"]
 ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "TRY003"]
-fixable = ["F", "I", "UP", "W", "C4", "D", "TRY", "PD", "PG", "PYI", "T20"]
+fixable = ["F", "I", "UP", "W", "C4", "D", "TRY", "PD", "PGH", "PYI", "T20"]
 format.quote-style = "double"
 format.indent-style = "space"
 

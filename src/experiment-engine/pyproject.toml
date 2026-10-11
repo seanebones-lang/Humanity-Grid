@@ -18,20 +18,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Chemistry",
 ]
 dependencies = [
-    "pydantic>=2.8",
-    "pydantic-settings>=2.4",
-    "pydantic-yaml>=1.0",
-    "pyyaml>=6.0",
-    "rich>=13.9",
-    "loguru>=0.7",
-    "polars>=1.10",
-    "pyarrow>=17.0",
-    "duckdb>=1.1",
-    "sqlite-utils>=3.37",
-    "httpx>=0.27",
-    "tenacity>=8.5",
-    "hashlib",
-    "pathlib",
+    "pydantic>=2.13.5,<3",
+    "pyyaml>=6.0.3,<7",
 ]
 
 [project.optional-dependencies]
@@ -51,9 +39,9 @@ build-backend = "hatchling.build"
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-select = ["E", "F", "I", "UP", "W", "C4", "N", "D", "TRY", "PD", "PG", "PYI", "T20"]
+select = ["E", "F", "I", "UP", "W", "C4", "N", "D", "TRY", "PD", "PGH", "PYI", "T20"]
 ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "TRY003"]
-fixable = ["F", "I", "UP", "W", "C4", "D", "TRY", "PD", "PG", "PYI", "T20"]
+fixable = ["F", "I", "UP", "W", "C4", "D", "TRY", "PD", "PGH", "PYI", "T20"]
 format.quote-style = "double"
 format.indent-style = "space"
 
@@ -71,3 +59,5 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
+[tool.hatch.build.targets.wheel]
+packages = ["src/experiment_engine"]

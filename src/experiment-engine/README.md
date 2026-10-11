@@ -1,3 +1,5 @@
+> **Development boundary:** JobSpec validation, hashing, and sequential configuration generation are local tools. They do not approve research, retrieve source bytes, pin a verified container, dispatch execution, or prove provenance. Template `TODO` hashes are draft placeholders and must be replaced and independently verified before any execution. The splitter preserves supplied parameters and hash declarations but does not materialize compound subsets; random/stratified splitting and external parameter files are unsupported.
+
 # Experiment Engine
 
 **Job definitions, dataset management, reproducibility, and provenance tracking for distributed scientific experiments.**

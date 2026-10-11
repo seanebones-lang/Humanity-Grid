@@ -19,8 +19,7 @@ work. This bridge is the join that keeps the two from quietly lying — a
 docking score stays an Observed measurement, a consensus stays an Inferred
 claim with visible premises, and Scout prose never gets upgraded to a fact.
 
-This module deliberately uses the Python standard library only (`urllib`),
-so it runs on any volunteer node / orchestrator without extra deps.
+HTTP transport uses urllib; score analysis requires the locked reviewer Python dependencies. This local bridge does not dispatch volunteer work or verify operator identity.
 
 Usage:
     python witness_bridge.py --witness http://127.0.0.1:8090 \
@@ -33,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import urllib.request
 from pathlib import Path
@@ -156,15 +156,18 @@ def load_report(report_path: Path) -> dict[str, Any]:
         return json.load(f)
 
 
-def summarize_scores(results_dir: Path, work_unit_id: str) -> dict[str, Any]:
+def summarize_scores(results_dir: Path, work_unit_id: str, replicate: int) -> dict[str, Any]:
     """Compute a small aggregate (n, mean, min affinity, hits) from parquet."""
     import polars as pl
 
-    rep_dir = results_dir / "rep1" / work_unit_id
+    rep_dir = results_dir / f"rep{replicate}" / work_unit_id
     f = rep_dir / "results.parquet"
     if not f.exists():
         f = rep_dir / f"results_{work_unit_id}.parquet"
     df = pl.read_parquet(f)
+    from validate_consensus import validate_scores
+
+    validate_scores(df)
     affinity = df["affinity_kcal_mol"]
     hits = int((affinity < HIT_THRESHOLD_KCAL).sum())
     return {
@@ -181,24 +184,99 @@ def main() -> int:
     p.add_argument("--job-id", required=True)
     p.add_argument("--hypothesis", required=True)
     p.add_argument("--results-dir", type=Path, required=True)
-    p.add_argument("--report", type=Path, required=True, help="consensus JSON from validate_consensus.py")
+    p.add_argument(
+        "--report", type=Path, required=True, help="consensus JSON from validate_consensus.py"
+    )
     p.add_argument("--domain", default="cancer-screening")
     p.add_argument("--pdb", default="1KE7", help="receptor PDB id for source_uri")
     args = p.parse_args()
 
+    from validate_consensus import compute_consensus, load_results
+    from urllib.parse import urlsplit
+    import ipaddress
+
+    target = urlsplit(args.witness)
+    if (
+        target.scheme != "http"
+        or target.username
+        or target.password
+        or target.path not in ("", "/")
+        or target.query
+        or target.fragment
+    ):
+        raise ValueError("Witness must be a plain loopback HTTP base URL")
+    if (
+        target.hostname != "localhost"
+        and not ipaddress.ip_address(target.hostname or "").is_loopback
+    ):
+        raise ValueError("This unauthenticated bridge supports loopback Witness only")
     report = load_report(args.report)
-    print(f"Loaded consensus report: {report['summary']['passed']}/{report['summary']['total']} work units passed")
+    units = report.get("work_units", [])
+    redundancy = report.get("redundancy", 0)
+    if (
+        report.get("job_id") != args.job_id
+        or not units
+        or not isinstance(redundancy, int)
+        or redundancy < 2
+    ):
+        raise ValueError("Nonempty report for this job with at least two replicates required")
+    threshold = report.get("threshold")
+    if not isinstance(threshold, (int, float)) or not 0 <= threshold <= 1:
+        raise ValueError("Finite threshold in [0, 1] required")
+    prepared = {}
+    recomputed = []
+    for wu in units:
+        uid = wu["work_unit_id"]
+        if uid in prepared or Path(uid).name != uid or uid in (".", ".."):
+            raise ValueError("Unique safe work-unit identifiers required")
+        dfs = [load_results(args.results_dir, uid, rep) for rep in range(1, redundancy + 1)]
+        correlations = {}
+        for i in range(redundancy):
+            for j in range(i + 1, redundancy):
+                correlations[f"rep{i + 1}_vs_rep{j + 1}"] = compute_consensus(dfs[i], dfs[j])
+        if set(wu.get("correlations", {})) != set(correlations) or any(
+            not math.isfinite(wu["correlations"][key])
+            or abs(wu["correlations"][key] - value) > 1e-12
+            for key, value in correlations.items()
+        ):
+            raise ValueError("Report correlations do not match source scores")
+        passed = all(r >= threshold for r in correlations.values())
+        if wu.get("passed") is not passed or wu.get("errors"):
+            raise ValueError("Report status/errors disagree with source score analysis")
+        prepared[uid] = [
+            summarize_scores(args.results_dir, uid, rep) for rep in range(1, redundancy + 1)
+        ]
+        recomputed.extend(correlations.values())
+    passed_count = sum(wu["passed"] for wu in units)
+    expected_summary = {
+        "total": len(units),
+        "passed": passed_count,
+        "failed": len(units) - passed_count,
+    }
+    if (
+        any(report["summary"].get(k) != v for k, v in expected_summary.items())
+        or not math.isfinite(report["summary"].get("mean_correlation", float("inf")))
+        or abs(
+            report["summary"].get("mean_correlation", float("inf"))
+            - sum(recomputed) / len(recomputed)
+        )
+        > 1e-12
+    ):
+        raise ValueError("Report summary disagrees with source scores")
+    print(
+        f"Loaded consensus report: {report['summary']['passed']}/{report['summary']['total']} work units passed"
+    )
 
     # 1) Observed: the job spec + each raw score aggregate is an observation.
     premise_ids: list[str] = []
     for wu in report.get("work_units", []):
         wu_id = wu["work_unit_id"]
-        agg = summarize_scores(args.results_dir, wu_id)
-        # Deposit each replicate's best score as an independent Observed node.
-        for rep, md in (("rep1", "replicate one"), ("rep2", "replicate two")):
+        # All source scores are validated before the first write.
+        for index, agg in enumerate(prepared[wu_id], 1):
+            rep = f"rep{index}"
             nid = f"grid-{args.job_id}-{wu_id}-{rep}"
             uri = f"grid://{args.pdb}/{args.job_id}/{wu_id}/{rep}"
-            value = f"{agg['best_affinity_kcal']:.3f}"
+            value = str(agg["best_affinity_kcal"])
             premise = deposit_observation(
                 args.witness,
                 quantity="docking_affinity_best",
@@ -224,9 +302,10 @@ def main() -> int:
             f"(r>={report['threshold']}); mean corr {report['summary']['mean_correlation']:.3f}"
         ),
         methodology=(
-            "Redundant work-unit execution across independent volunteer nodes; "
-            "Pearson correlation on common compounds; IQR outlier flagging; "
-            "disagreement past threshold triggers a third arbitration run."
+            "Local score-file review; Pearson correlation across complete matching compound sets. "
+            "Premises are per-replicate minimum score aggregates, not the complete raw vectors. "
+            "The source report was recomputed before deposit. No independent operators, volunteer dispatch, "
+            "automatic arbitration, biological efficacy, or predictive validity are established."
         ),
         premises=premise_ids,
         falsifiers=[
@@ -244,29 +323,11 @@ def main() -> int:
     )
     print(f"  Inferred consensus -> {consensus_id}")
 
-    # 3) Generated: Research Scout hypothesis prose, model + prompt stored.
-    gen_id = deposit_generation(
-        args.witness,
-        content=(
-            f"Hypothesis {args.hypothesis}: known protein-ligand system "
-            f"({args.pdb}) screened for validation; grid task {args.job_id} "
-            "checks whether the distributed pipeline reproduces expected "
-            "actives. Docking score is Observed; this prose is Generated and "
-            "requires human review before promotion."
-        ),
-        generator="research-scout",
-        model_version="v0.1",
-        prompt="Generate human-readable hypothesis framing from the validated job's JobSpec",
-        author_id="research-scout:scout-v1",
-        domain=args.domain,
-        labels=["hypothesis", args.hypothesis, "generated"],
-    )
-    print(f"  Generated hypothesis -> {gen_id}")
-
+    # No model call occurs here. Hand-written report framing is not falsely attributed to Research Scout.
     print(f"\nRecord complete for {args.job_id}:")
     print(f"  Observed premises : {premise_ids}")
     print(f"  Inferred consensus: {consensus_id}")
-    print(f"  Generated scout   : {gen_id}")
+    print("  No Generated record: this bridge did not invoke a model")
     return 0
 
 

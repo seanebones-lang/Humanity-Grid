@@ -2,7 +2,7 @@
 
 # Humanity Grid
 
-**A global, open-source scientific computing network that continuously turns unused computers into experiments aimed at important human problems.**
+**A pre-alpha toolkit for reviewing local computational experiments and preserving their evidence in Witness. The long-term goal is a public-benefit volunteer computing network.**
 
 > **Current review status:** Humanity Grid is pre-alpha. The supported scientific
 > review path is the frozen local EXP-001 infrastructure demonstration, not a
@@ -76,7 +76,7 @@ global compute network.
 
 Each Python component has its own `pyproject.toml`; there is no repository-root
 `requirements.txt`, unified dependency lock, provisioned BOINC control plane,
-or release artifact yet. Use the component documentation only for focused
+or volunteer platform release artifact yet. A pinned `requirements-review.txt` now covers the bounded local reviewer tools. Use the component documentation only for focused
 development work after completing the Proof A review path.
 
 See [Proof A: scientific review and local replay](docs/PROOF_A_REVIEW.md) for
@@ -104,40 +104,13 @@ humanity-grid/
 
 ---
 
-## First Experiment: Validation Pipeline
+## First experiment: what is available today
 
-We start with a **boring but rigorous** experiment:
+The frozen EXP-001 package contains two local Vina runs over six compounds, score files, a correlation report, and a Witness snapshot. The reviewer path verifies all 43 artifacts, compares every stored field in the snapshot and export, reanalyses the scores, and replays 12 Observed / 2 Inferred / 1 Generated records into a fresh local Witness database. It does not prove docking enrichment, biological efficacy, independent execution, or an operating distributed scheduler.
 
-1. Take a known protein-ligand system with experimentally established results (e.g., CDK2 with known inhibitors from ChEMBL)
-2. Run our distributed virtual screening pipeline
-3. Verify we rediscover the expected active compounds with statistical significance
-4. Publish all data, code, and analysis openly
+## Volunteer interface preview
 
-This proves: **scheduler → machines → calculation → verification → aggregation → scientific reproducibility.**
-
----
-
-## Volunteer App Preview
-
-```
-What do you want your computer working on tonight?
-
-🧬 Cancer Research        ● Selected
-🧠 Alzheimer's Research   ○
-🦠 Antibiotic Discovery   ○
-🌎 Climate Modeling       ○
-🔋 Clean Energy           ○
-
-Use my computer:       While idle  ▼
-Maximum CPU:           30%         ████████░░
-Maximum GPU:           40%         ██████████░░
-Run on battery:        No
-Pause above:           75°C
-Electricity preference: Only during my chosen hours  ▼
-```
-
-**Then:**
-> **Tonight your computer screened 18,421 candidate molecules for a pediatric cancer study.**
+The web interface is a design preview. Its resource and cause controls describe planned preferences; they do not start computing, change machine settings, or connect to BOINC. No volunteer contributions or published research are claimed. The native Tauri wrapper remains unsupported development scaffolding and is outside the supported reviewer launch. See [its current status](src/volunteer-app/README.md).
 
 ---
 

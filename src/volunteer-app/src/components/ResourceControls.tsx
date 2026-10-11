@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Slider } from '@/components/ui'
-import { invoke } from '@tauri-apps/api/core'
 import { Cpu, MemoryStick, Thermometer, Battery, Wifi, Network, Zap } from 'lucide-react'
 import { UserSettings, SystemInfo, ThermalInfo, PowerInfo } from '@/types'
 
@@ -34,7 +33,7 @@ export default function ResourceControls({ systemInfo, thermalInfo, powerInfo, s
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold mb-2">Resource Controls</h1>
-        <p className="text-text-muted">Configure how much of your computer's resources Humanity Grid can use.</p>
+        <p className="text-text-muted">Preview planned resource preferences. These controls do not enforce limits or use your hardware.</p>
       </div>
 
       {/* System Overview */}
@@ -91,19 +90,19 @@ export default function ResourceControls({ systemInfo, thermalInfo, powerInfo, s
               <span>Maximum CPU Usage</span>
               <span className="font-mono font-medium">{localSettings?.cpu_limit_percent ?? 30}%</span>
             </div>
-            <Slider
+            <Slider aria-label="Preview cpu limit percent"
               value={[localSettings?.cpu_limit_percent ?? 30]}
               onValueChange={([v]) => updateSetting('cpu_limit_percent', v)}
               max={100}
               step={5}
               className="h-2"
             />
-            <p className="text-xs text-text-muted mt-1">Limits BOINC to this percentage of total CPU time. Lower = cooler, quieter.</p>
+            <p className="text-xs text-text-muted mt-1">Planned CPU preference only; no BOINC process or hardware cap is active.</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-text-muted">CPU Cores Available</label>
-              <p className="font-mono text-lg">{systemInfo?.cpus.length ?? 0}</p>
+              <p className="font-mono text-lg">{systemInfo?.cpus.length ?? 'Unknown'}</p>
             </div>
             <div>
               <label className="text-sm text-text-muted">Cores at Limit</label>
@@ -126,8 +125,8 @@ export default function ResourceControls({ systemInfo, thermalInfo, powerInfo, s
                 <span>Maximum GPU Usage</span>
                 <span className="font-mono font-medium">{localSettings?.gpu_limit_percent ?? 40}%</span>
               </div>
-              <Slider
-                value={[localSettings?.gpu_limit_percent ?? 40]}
+              <Slider aria-label="Preview gpu limit percent"
+              value={[localSettings?.gpu_limit_percent ?? 40]}
                 onValueChange={([v]) => updateSetting('gpu_limit_percent', v)}
                 max={100}
                 step={5}
@@ -167,14 +166,14 @@ export default function ResourceControls({ systemInfo, thermalInfo, powerInfo, s
             <span>Maximum RAM Usage</span>
             <span className="font-mono font-medium">{localSettings?.memory_limit_gb ?? 8} GB</span>
           </div>
-          <Slider
-            value={[localSettings?.memory_limit_gb ?? 8]}
+          <Slider aria-label="Preview memory limit gb"
+              value={[localSettings?.memory_limit_gb ?? 8]}
             onValueChange={([v]) => updateSetting('memory_limit_gb', v)}
             max={Math.floor((systemInfo?.total_memory ?? 16 * 1024 * 1024 * 1024) / 1024 / 1024 / 1024)}
             step={1}
             className="h-2"
           />
-          <p className="text-xs text-text-muted mt-1">Hard limit on RAM for BOINC tasks. Prevents system slowdown.</p>
+          <p className="text-xs text-text-muted mt-1">Planned RAM cap; no limit is enforced in this preview.</p>
         </div>
       </div>
 
@@ -190,7 +189,7 @@ export default function ResourceControls({ systemInfo, thermalInfo, powerInfo, s
               <span>Pause Above</span>
               <span className="font-mono font-medium">{localSettings?.thermal_limit_celsius ?? 75}°C</span>
             </div>
-            <Slider
+            <Slider aria-label="Preview thermal limit celsius"
               value={[localSettings?.thermal_limit_celsius ?? 75]}
               onValueChange={([v]) => updateSetting('thermal_limit_celsius', v)}
               max={95}
@@ -198,14 +197,14 @@ export default function ResourceControls({ systemInfo, thermalInfo, powerInfo, s
               step={1}
               className="h-2"
             />
-            <p className="text-xs text-text-muted mt-1">Current max: {maxTemp.toFixed(1)}°C</p>
+            <p className="text-xs text-text-muted mt-1">Current max: {thermalInfo ? maxTemp.toFixed(1) + '°C' : 'unavailable'}</p>
           </div>
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span>Resume Below</span>
               <span className="font-mono font-medium">{localSettings?.thermal_resume_celsius ?? 65}°C</span>
             </div>
-            <Slider
+            <Slider aria-label="Preview thermal resume celsius"
               value={[localSettings?.thermal_resume_celsius ?? 65]}
               onValueChange={([v]) => updateSetting('thermal_resume_celsius', v)}
               max={90}

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-export interface SliderProps extends React.ComponentPropsWithoutRef<typeof React.ForwardRefExoticComponent<React.SliderHTMLAttributes<HTMLInputElement>>> {
+export interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
   value: number[]
   onValueChange: (value: number[]) => void
   max?: number

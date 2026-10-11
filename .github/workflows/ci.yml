@@ -1,0 +1,54 @@
+name: Reviewer checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  proof-and-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-review.txt
+      - run: python -m pip install ./src/experiment-engine
+      - run: python -m pip check
+      - name: Installed model package outside checkout
+        run: cd /tmp && python -c "from experiment_engine.jobs.spec import JobSpec; print(JobSpec.__name__)"
+      - run: python proofs/EXP-001-v1/tools/verify.py
+      - run: python -m unittest discover -s tests -v
+      - run: python src/compute-broker/scripts/validate_consensus.py --job-id EXP-001 --results-dir proofs/EXP-001-v1/outputs/vina --output /tmp/consensus.json
+      - run: python ingest_exp001.py --help
+      - run: python src/experiment-engine/scripts/create_job.py --help
+      - run: python src/experiment-engine/scripts/split_work_units.py --help
+  web-preview:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/volunteer-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci --ignore-scripts
+      - run: npm audit --audit-level=moderate
+      - run: npm run build
+
+  witness-replay:
+    runs-on: ubuntu-latest
+    env:
+      SQLX_OFFLINE: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: seanebones-lang/witness
+          ref: 119463ae766f8bfbea6938dfd7b086d1e99afabb
+          path: witness-consumer
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --locked --manifest-path witness-consumer/Cargo.toml --package witness-api
+      - run: python3 scripts/check_witness_replay.py --binary witness-consumer/target/debug/witness-api

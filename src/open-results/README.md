@@ -1,3 +1,5 @@
+> **Pre-alpha component:** this document includes planned behavior. This component is not part of an installed, verified volunteer platform. Start with the repository root and the supported local Proof A reviewer path; do not infer scientific validity, deployed services, or independent execution from these design descriptions.
+
 # Open Results
 
 **Public data portal, reproducible analyses, and open science publishing for Humanity Grid.**

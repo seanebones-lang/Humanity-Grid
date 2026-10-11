@@ -11,12 +11,10 @@ import sys
 from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from experiment_engine.jobs.spec import (
-    JobSpec,
     create_job_from_template,
-    VIRTUAL_SCREENING_TEMPLATE,
 )
 
 
@@ -31,7 +29,7 @@ def main():
     args = parser.parse_args()
 
     # Extract provenance from overrides (required)
-    provenance = args.overrides.pop("provenance", None)
+    provenance = args.overrides.get("provenance")
     if not provenance:
         print("ERROR: provenance required in overrides", file=sys.stderr)
         sys.exit(1)
@@ -44,9 +42,6 @@ def main():
         name=args.name,
         overrides=args.overrides,
     )
-
-    # Manually set provenance (create_job_from_template doesn't handle nested provenance well)
-    job.provenance = job.provenance.__class__(**provenance)
 
     # Write output
     job.to_yaml(args.output)

@@ -1,181 +1,20 @@
-# Compute Broker
+# Compute Broker: local reviewer tools and planned architecture
 
-**BOINC adapter, CPU/GPU workload management, and result validation for Humanity Grid.**
+**Current status:** no provisioned BOINC control plane, volunteer dispatch, automatic arbitration, or credit system is implemented as a supported platform. The supported tools are `scripts/validate_consensus.py` (local score-file reanalysis) and `scripts/witness_bridge.py` (local deposit of validated score aggregates and a bounded inference). Dependencies are pinned in the repository's `requirements-review.txt`.
 
-## Responsibilities
+The validator requires matching complete work-unit and compound sets, unique IDs, finite scores, and at least two nonconstant score vectors. It rejects empty experiments. IQR outliers use absolute differences between replicate pairs with linear quartiles. Agreement is a numerical property of supplied vectors, not biological validity or independent execution.
 
-- Interface with BOINC (via BOINC Central) for work distribution
-- Manage heterogeneous CPU/GPU workloads (CUDA, HIP, OpenCL, Metal)
-- Handle work unit assignment, tracking, and result collection
-- Validate results through redundant computation and consensus
-- Manage volunteer registration, credits, and statistics
+The bridge recomputes report correlations and checks all source files before its first write. Each replica's minimum score comes from its own file. Its inference explicitly states that those minimum-score premises do not contain the complete raw vectors. It makes no model call and emits no invented Research Scout generation. Writes are sequential and not idempotent: use a disposable local database; partial writes can remain if a later HTTP request fails. Use root `ingest_exp001.py` for the bounded historical example's verified reuse behavior.
 
-## BOINC Integration
-
-We leverage **BOINC Central** (boinc.berkeley.edu/central) which provides:
-- Managed BOINC server infrastructure
-- Docker workload support
-- AutoDock job type support
-- Web-based project management
-- Volunteer-facing website and account management
-
-### Architecture
-
-```
-Humanity Grid Compute Broker
-│
-├── BOINC Central (managed server)
-│   ├── Project configuration
-│   ├── Work generation (from our Experiment Engine)
-│   ├── Result validation (redundancy + consensus)
-│   ├── Credit system
-│   └── Volunteer website
-│
-├── Local Broker Service (our code)
-│   ├── Job → BOINC work unit translation
-│   ├── Dataset staging to BOINC Central
-│   ├── Container image management (Docker Hub / GHCR)
-│   ├── Result retrieval and aggregation
-│   └── Quality monitoring
-│
-└── Volunteer Clients
-    ├── BOINC Manager (standard)
-    └── Humanity Grid Volunteer App (Tauri - custom UI)
-```
-
-## Work Unit Translation
-
-Our Experiment Engine job specs → BOINC work units:
-
-```
-JobSpec (Experiment Engine)
-    ↓
-ComputeBroker.translate_job()
-    ↓
-BOINC Work Units:
-  - wu_001: compounds 0-999
-  - wu_002: compounds 1000-1999
-  ...
-  - wu_N: compounds (N-1)*1000 to N*1000
-```
-
-Each work unit includes:
-- Input files (protein structure, compound subset, parameters)
-- Docker image reference
-- Resource requirements (CPU, GPU, memory, time)
-- Expected output files
-
-## GPU Workload Support
-
-| Platform | API | AutoDock-GPU | OpenMM | Notes |
-|----------|-----|--------------|--------|-------|
-| NVIDIA | CUDA | ✅ Native | ✅ Native | Primary target |
-| AMD | HIP | ✅ Via hipify | ✅ Native | ROCm 5+ |
-| Intel/AMD | OpenCL | ✅ | ✅ | Fallback |
-| Apple | Metal | ❌ | ✅ Via OpenMM | M-series Macs |
-
-## Result Validation Pipeline
-
-```
-Work Unit Completed (×redundancy)
-    ↓
-Results Retrieved
-    ↓
-Schema Validation (required fields, ranges)
-    ↓
-Consensus Check (Pearson correlation between replicates)
-    ↓
-Outlier Detection (IQR / Z-score)
-    ↓
-┌─ Pass → Mark Validated → Aggregate
-└─ Fail → Re-queue (up to max_retries)
-```
-
-## Volunteer Credit System
-
-- **Credit = measured FLOPs × time** (standard BOINC Cobblestones)
-- **Validated results only** — failed/outlier units earn no credit
-- **Bonus for GPU work** — multiplier based on GPU capability
-- **Team/school/company leaderboards** — aggregated from individual credits
-
-## Witness Integration (Evidence Records)
-
-Every validated result is deposited into a **Witness** instance as a typed,
-inspectable Record. This is the join that keeps the grid honest: raw scores
-stay **Observed**, consensus stays **Inferred** (with the observed nodes as
-explicit premises and a falsifier), and Research Scout prose stays
-**Generated** (`human_reviewed:false`) until a human promotes it.
-
-```
-scripts/witness_bridge.py
-  --witness http://127.0.0.1:8090
-  --job-id EXP-001 --hypothesis H-9182
-  --results-dir validation/output/results
-  --report validation/output/results/consensus.json
-  --domain cancer-screening --pdb 1KE7
-
-Observed  <- one ProvenanceNode per replicate (best-affinity, instrument=node)
-Inferred  <- consensus (premises = observed brains, falsifier attached)
-Generated <- scout hypothesis prose (model + prompt stored, human_reviewed:false)
-```
-
-The bridge uses only the Python standard library (`urllib`), so it runs on
-any volunteer node or orchestrator. It targets the Witness REST ingest
-endpoints (`POST /api/ingest/{observation|inference|generation}`), which were
-added so a stdlib client can deposit all three epistemic types.
-
-## Architecture
-
-```
-compute-broker/
-├── pyproject.toml
-├── src/
-│   └── compute_broker/
-│       ├── __init__.py
-│       ├── boinc/
-│       │   ├── client.py          # BOINC Central API client
-│       │   ├── workgen.py         # Work unit generation from JobSpec
-│       │   ├── result_handler.py  # Result retrieval and parsing
-│       │   └── project_config.py  # Project configuration
-│       ├── workloads/
-│       │   ├── cpu.py             # CPU workload management
-│       │   ├── gpu.py             # GPU workload management
-│       │   ├── docker.py          # Docker container handling
-│       │   └── resources.py       # Resource detection/limits
-│       ├── validation/
-│       │   ├── consensus.py       # Replicate consensus checking
-│       │   ├── schema.py          # Output schema validation
-│       │   ├── outliers.py        # Outlier detection
-│       │   └── retry.py           # Failed unit re-queue logic
-│       ├── credits/
-│       │   ├── calculator.py      # Credit calculation
-│       │   └── leaderboard.py     # Team/individual rankings
-│       └── config.py
-├── tests/
-└── scripts/
-    ├── sync_job.py
-    ├── fetch_results.py
-    └── monitor.py
-```
-
-## Quick Start
+Example, from the repository root:
 
 ```bash
-cd src/compute-broker
-uv pip install -e .
-
-# Configure BOINC Central project
-python -m compute_broker.boinc.project_config \
-  --project-key YOUR_KEY \
-  --project-url https://boinc.berkeley.edu/central/your-project
-
-# Translate job to BOINC work units
-python -m compute_broker.boinc.workgen \
-  --job-spec ../../experiment-engine/job-spec.yaml \
-  --output-dir /path/to/boinc/workgen
-
-# Fetch and validate results
-python -m compute_broker.boinc.result_handler \
-  --job-id EXP-H9182-VS-001 \
-  --output results/
+.venv/bin/python src/compute-broker/scripts/validate_consensus.py --job-id EXP-001 --results-dir proofs/EXP-001-v1/outputs/vina --output /tmp/humanity-grid-consensus.json
+.venv/bin/python src/compute-broker/scripts/witness_bridge.py --witness http://127.0.0.1:18080 --job-id EXP-001 --hypothesis EXP-001 --results-dir proofs/EXP-001-v1/outputs/vina --report /tmp/humanity-grid-consensus.json
 ```
+
+A separate fresh Witness database must already be running. Neither command runs docking or dispatches work. Historical source identity and scientific correctness remain unverified.
+
+## Planned architecture (not an available volunteer service)
+
+BOINC work distribution, authenticated node identity, bounded container execution, independent redundant execution, arbitration, credits, GPU scheduling, and safe platform installers need implementation and separate verification. Design sketches in other project documents describe that future system; they are not evidence of deployed services.

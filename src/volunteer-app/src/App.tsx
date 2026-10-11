@@ -1,13 +1,10 @@
-import { useState, useEffect } from 'react'
-import { invoke } from '@tauri-apps/api/core'
-import { Settings, User, X, ChevronDown, ChevronUp, Pause, Play, Info, Trophy, FlaskConical, Brain, Bug, Globe, Zap, Dna } from 'lucide-react'
+import { useState } from 'react'
+import { Settings, X, Trophy, FlaskConical, Brain, Zap, Dna } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 import CauseSelector from './components/CauseSelector'
 import ResourceControls from './components/ResourceControls'
-import ThermalMonitor from './components/ThermalMonitor'
-import PowerSchedule from './components/PowerSchedule'
 import Dashboard from './components/Dashboard'
 import ProjectStories from './components/ProjectStories'
 import TeamLeaderboard from './components/TeamLeaderboard'
@@ -125,73 +122,22 @@ function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs))
 }
 
-const CAUSE_ICONS: Record<string, React.ReactNode> = {
-  cancer: <Dna className="w-5 h-5" />,
-  alzheimer: <Brain className="w-5 h-5" />,
-  antibiotics: <Bug className="w-5 h-5" />,
-  climate: <Globe className="w-5 h-5" />,
-  energy: <Zap className="w-5 h-5" />,
-  rare: <FlaskConical className="w-5 h-5" />,
-}
-
 function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'causes' | 'resources' | 'stories' | 'teams' | 'settings'>('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null)
-  const [thermalInfo, setThermalInfo] = useState<ThermalInfo | null>(null)
-  const [powerInfo, setPowerInfo] = useState<PowerInfo | null>(null)
-  const [boincStatus, setBoincStatus] = useState<BoincStatus | null>(null)
-  const [settings, setSettings] = useState<UserSettings | null>(null)
-  const [contributions, setContributions] = useState<ContributionStats | null>(null)
-  const [projectStories, setProjectStories] = useState<ProjectStory[]>([])
-  const [loading, setLoading] = useState(true)
-
-  // Load initial data
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [sys, therm, power, boinc, sett, contrib, stories] = await Promise.all([
-          invoke<SystemInfo>('get_system_info'),
-          invoke<ThermalInfo>('get_thermal_info'),
-          invoke<PowerInfo>('get_power_info'),
-          invoke<BoincStatus>('boinc_get_status'),
-          invoke<UserSettings>('get_settings'),
-          invoke<ContributionStats>('get_contributions'),
-          invoke<ProjectStory[]>('get_project_stories'),
-        ])
-        setSystemInfo(sys)
-        setThermalInfo(therm)
-        setPowerInfo(power)
-        setBoincStatus(boinc)
-        setSettings(sett)
-        setContributions(contrib)
-        setProjectStories(stories)
-      } catch (e) {
-        console.error('Failed to load data:', e)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadData()
-
-    // Refresh system info every 5 seconds
-    const interval = setInterval(() => {
-      invoke<SystemInfo>('get_system_info').then(setSystemInfo).catch(console.error)
-      invoke<ThermalInfo>('get_thermal_info').then(setThermalInfo).catch(console.error)
-      invoke<PowerInfo>('get_power_info').then(setPowerInfo).catch(console.error)
-      invoke<BoincStatus>('boinc_get_status').then(setBoincStatus).catch(console.error)
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="animate-pulse-soft text-primary text-xl">Humanity Grid</div>
-      </div>
-    )
-  }
+  // Preview deliberately has no native bridge, telemetry, or volunteer connection.
+  const systemInfo: SystemInfo | null = null
+  const thermalInfo: ThermalInfo | null = null
+  const powerInfo: PowerInfo | null = null
+  const boincStatus: BoincStatus | null = null
+  const contributions: ContributionStats | null = null
+  const projectStories: ProjectStory[] = []
+  const [settings, setSettings] = useState<UserSettings>({
+    causes: [], cpu_limit_percent: 30, gpu_limit_percent: 0, memory_limit_gb: 4,
+    thermal_limit_celsius: 75, thermal_resume_celsius: 65, run_on_battery: false,
+    schedule: { weekday_start: '22:00', weekday_end: '06:00', weekend_all_day: false, custom_hours: [] },
+    network_wifi_only: true, network_metered_allowed: false,
+  })
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: <FlaskConical className="w-5 h-5" /> },
@@ -220,6 +166,7 @@ function App() {
             </div>
             <button
               className="lg:hidden p-2 rounded-md hover:bg-surface-elevated"
+              aria-label="Close navigation"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="w-5 h-5" />
@@ -253,19 +200,19 @@ function App() {
                 <span>BOINC Status</span>
                 <span className={cn(
                   'flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
-                  boincStatus?.running ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
+                  false ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
                 )}>
-                  <span className={cn('h-1.5 w-1.5 rounded-full', boincStatus?.running ? 'bg-success' : 'bg-error')} />
-                  {boincStatus?.running ? 'Running' : 'Stopped'}
+                  <span className={cn('h-1.5 w-1.5 rounded-full', false ? 'bg-success' : 'bg-error')} />
+                  Not connected
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-center">
                 <div>
-                  <div className="text-lg font-bold">{boincStatus?.active_tasks ?? 0}</div>
+                  <div className="text-lg font-bold">{0}</div>
                   <div className="text-[11px] text-text-subtle">Active</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold">{boincStatus?.gpu_tasks ?? 0}</div>
+                  <div className="text-lg font-bold">{0}</div>
                   <div className="text-[11px] text-text-subtle">GPU</div>
                 </div>
               </div>
@@ -299,6 +246,7 @@ function App() {
         <header className="flex h-14 items-center justify-between px-4 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
           <button
             className="lg:hidden p-2 rounded-md hover:bg-surface-elevated"
+            aria-label="Open navigation"
             onClick={() => setSidebarOpen(true)}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,33 +257,11 @@ function App() {
           <div className="flex-1 lg:flex-none" />
 
           <div className="flex items-center gap-3">
-            {/* System quick stats */}
-            {systemInfo && (
-              <div className="hidden sm:flex items-center gap-4 text-xs text-text-muted">
-                <div className="flex items-center gap-1">
-                  <span className={cn('h-2 w-2 rounded-full', systemInfo.cpu_usage > 80 ? 'bg-error' : systemInfo.cpu_usage > 50 ? 'bg-warning' : 'bg-success')} />
-                  <span>{systemInfo.cpu_usage.toFixed(0)}% CPU</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className={cn('h-2 w-2 rounded-full', 
-                    (systemInfo.used_memory / systemInfo.total_memory) > 0.8 ? 'bg-error' : 
-                    (systemInfo.used_memory / systemInfo.total_memory) > 0.5 ? 'bg-warning' : 'bg-success')} />
-                  <span>{(systemInfo.used_memory / systemInfo.total_memory * 100).toFixed(0)}% RAM</span>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <button className="p-2 rounded-lg hover:bg-surface-elevated" title="Settings">
-                <Settings className="w-5 h-5" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-surface-elevated" title="Profile">
-                <User className="w-5 h-5" />
-              </button>
-            </div>
+            <button className="p-2 rounded-lg hover:bg-surface-elevated" aria-label="Open settings" onClick={() => setActiveTab('settings')}><Settings className="w-5 h-5" /></button>
           </div>
         </header>
 
+        <div role="status" className="p-4 bg-warning/10 border-b border-warning/30 text-sm">Design preview — no compute jobs, hardware monitoring, account, or BOINC connection. Changes last for this page session and do not affect your computer.</div>
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 lg:p-6">
           {activeTab === 'dashboard' && (

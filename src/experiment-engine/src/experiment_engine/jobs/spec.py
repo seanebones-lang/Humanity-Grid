@@ -6,11 +6,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 import yaml
 from yaml import safe_load as parse_yaml_raw
 
@@ -40,17 +40,19 @@ class ValidationStatus(str, Enum):
 
 class ComputeRequirements(BaseModel):
     """Compute resource requirements for a work unit."""
+
     engine: str
     gpu_required: bool = False
-    gpu_memory_gb: int = 0
-    cpus: int = 1
-    memory_gb: int = 4
-    estimated_runtime_hours: float = 1.0
-    max_runtime_hours: float = 4.0
+    gpu_memory_gb: int = Field(default=0, ge=0)
+    cpus: int = Field(default=1, ge=1)
+    memory_gb: int = Field(default=4, ge=1)
+    estimated_runtime_hours: float = Field(default=1.0, gt=0, allow_inf_nan=False)
+    max_runtime_hours: float = Field(default=4.0, gt=0, allow_inf_nan=False)
 
 
 class WorkUnitSpec(BaseModel):
     """Work unit splitting specification."""
+
     total: int = Field(ge=1)
     compounds_per_unit: int = Field(ge=1)
     compound_library: str
@@ -59,8 +61,11 @@ class WorkUnitSpec(BaseModel):
 
 class InputSpec(BaseModel):
     """Input data specification with content addressing."""
+
+    model_config = ConfigDict(extra="forbid")
     source: str
     sha256: str
+    parameters: dict[str, Any] = Field(default_factory=dict)
     # Optional structured metadata
     binding_site: Optional[dict] = None
     format: Optional[str] = None
@@ -68,6 +73,7 @@ class InputSpec(BaseModel):
 
 class ContainerSpec(BaseModel):
     """Container specification for reproducible execution."""
+
     image: str
     sha256: str
     entrypoint: str
@@ -86,6 +92,7 @@ class OutputValidation(BaseModel):
 
 class OutputSpec(BaseModel):
     """Output specification."""
+
     name: str
     format: str  # parquet, csv, json, sdf, pdb
     schema_fields: list[OutputSchemaField] = Field(default_factory=list)
@@ -94,14 +101,16 @@ class OutputSpec(BaseModel):
 
 class ValidationSpec(BaseModel):
     """Validation and quality control specification."""
-    redundancy: int = Field(default=2, ge=1)
-    consensus_threshold: float = Field(default=0.8, ge=0.0, le=1.0)
+
+    redundancy: int = Field(default=2, ge=2)
+    consensus_threshold: float = Field(default=0.8, ge=0.0, le=1.0, allow_inf_nan=False)
     outlier_detection: str = "iqr"  # iqr, zscore, isolation_forest
     failed_unit_retry: int = Field(default=3, ge=0)
 
 
 class ProvenanceSpec(BaseModel):
     """Provenance and approval tracking."""
+
     hypothesis_id: str
     researcher_approval: str
     approval_timestamp: datetime
@@ -111,9 +120,10 @@ class ProvenanceSpec(BaseModel):
 
 class JobSpec(BaseModel):
     """Complete job specification for a distributed experiment."""
+
     job_id: str
     hypothesis_id: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     experiment_type: ExperimentType
     name: str
     description: str = ""
@@ -133,7 +143,14 @@ class JobSpec(BaseModel):
         data = self.model_dump(exclude={"provenance": {"spec_hash"}})
         # Convert to canonical JSON
         canonical = json.dumps(data, sort_keys=True, default=str)
-        self.provenance.spec_hash = hashlib.sha256(canonical.encode()).hexdigest()
+        digest = hashlib.sha256(canonical.encode()).hexdigest()
+        if self.provenance.spec_hash is not None and self.provenance.spec_hash != digest:
+            raise ValueError("Provided spec_hash does not match the job content")
+        if self.hypothesis_id != self.provenance.hypothesis_id:
+            raise ValueError("Provenance hypothesis ID must match the job")
+        if self.compute.estimated_runtime_hours > self.compute.max_runtime_hours:
+            raise ValueError("Estimated runtime must not exceed the runtime cap")
+        self.provenance.spec_hash = digest
         return self
 
     @field_validator("job_id")
@@ -145,7 +162,9 @@ class JobSpec(BaseModel):
 
     def to_yaml(self, path: Optional[Path] = None) -> str:
         """Serialize to YAML."""
-        yaml_str = yaml.dump(self.model_dump(mode="json"), sort_keys=False, default_flow_style=False)
+        yaml_str = yaml.dump(
+            self.model_dump(mode="json"), sort_keys=False, default_flow_style=False
+        )
         if path:
             path.write_text(yaml_str)
         return yaml_str
@@ -171,6 +190,7 @@ class JobSpec(BaseModel):
 
 class WorkUnit(BaseModel):
     """A single unit of work within a job."""
+
     work_unit_id: str
     job_id: str
     index: int
@@ -178,13 +198,14 @@ class WorkUnit(BaseModel):
     input_hashes: dict[str, str]
     status: ValidationStatus = ValidationStatus.PENDING
     assigned_node: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
 
 class JobResult(BaseModel):
     """Result from a completed work unit."""
+
     work_unit_id: str
     job_id: str
     node_id: str
@@ -235,9 +256,7 @@ VIRTUAL_SCREENING_TEMPLATE = {
         "docking_parameters": {
             "source": "inline",
             "sha256": "TODO",
-            "exhaustiveness": 16,
-            "num_modes": 10,
-            "energy_range": 3.0,
+            "parameters": {"exhaustiveness": 16, "num_modes": 10, "energy_range": 3.0},
         },
     },
     "container": {
@@ -288,6 +307,7 @@ def create_job_from_template(
         raise ValueError(f"Unknown template: {template_name}")
 
     import copy
+
     template = copy.deepcopy(templates[template_name])
 
     # Apply overrides

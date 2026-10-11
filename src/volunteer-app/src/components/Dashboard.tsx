@@ -28,18 +28,8 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--color-primary)/10,transparent_70%)]" />
         <div className="relative z-10">
           <h1 className="text-3xl lg:text-4xl font-bold mb-2 gradient-text">Welcome back</h1>
-          <p className="text-text-muted mb-6 max-w-xl">
-            Tonight your computer screened <span className="font-bold text-primary">18,421</span> candidate molecules
-            for a pediatric cancer study.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <button className="px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition-colors">
-              View Details →
-            </button>
-            <button className="px-4 py-2 rounded-lg bg-surface-elevated text-text font-medium hover:bg-surface transition-colors border border-border">
-              Pause Computing
-            </button>
-          </div>
+          <p className="text-text-muted mb-6 max-w-xl">No volunteer account or computing service is connected. This interface previews planned controls; it reports no completed research.</p>
+
         </div>
         <div className="absolute bottom-4 right-4 opacity-10">
           <FlaskConical className="w-32 h-32" />
@@ -81,7 +71,7 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
             <h2 className="font-semibold">Current Activity</h2>
             <div className={cn('flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium', boincStatus?.running ? 'bg-success/20 text-success' : 'bg-surface-elevated text-text-muted')}>
               <span className={cn('h-2 w-2 rounded-full', boincStatus?.running ? 'bg-success' : 'bg-text-subtle')} />
-              {boincStatus?.running ? 'Computing' : 'Idle'}
+              {boincStatus?.running ? 'Computing' : 'Not connected'}
             </div>
           </div>
 
@@ -116,7 +106,7 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
             <div className="text-center py-8 text-text-muted">
               <FlaskConical className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No active work units</p>
-              <p className="text-sm mt-1">BOINC will fetch work when available</p>
+              <p className="text-sm mt-1">Volunteer dispatch is not implemented in this preview</p>
             </div>
           )}
         </div>
@@ -156,11 +146,11 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
                 </div>
                 <div>
                   <p className="font-medium">Temperature</p>
-                  <p className="text-sm text-text-muted">Thermal throttling: {isThermalThrottling ? 'Active' : 'Inactive'}</p>
+                  <p className="text-sm text-text-muted">{thermalInfo ? (isThermalThrottling ? 'High temperature' : 'Below preview threshold') : 'Hardware monitoring unavailable'}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className={cn('font-mono text-xl font-bold', isThermalThrottling ? 'text-warning' : 'text-success')}>{maxTemp.toFixed(1)}°C</p>
+                <p className={cn('font-mono text-xl font-bold', isThermalThrottling ? 'text-warning' : 'text-success')}>{thermalInfo ? maxTemp.toFixed(1) + '°C' : 'Unknown'}</p>
                 <p className="text-xs text-text-muted">Max observed</p>
               </div>
             </div>
@@ -176,12 +166,12 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
                 <div className="p-2 rounded-lg bg-primary/10"><Battery className="w-5 h-5 text-primary" /></div>
                 <div>
                   <p className="font-medium">Power</p>
-                  <p className="text-sm text-text-muted">{powerInfo?.on_battery ? 'Battery' : 'AC Power'}</p>
+                  <p className="text-sm text-text-muted">{powerInfo ? (powerInfo.on_battery ? 'Battery' : 'AC Power') : 'Unknown power source'}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-mono text-xl font-bold">{powerInfo?.battery_percentage ?? 100}%</p>
-                <p className="text-xs text-text-muted">{powerInfo?.is_charging ? 'Charging' : 'Discharging'}</p>
+                <p className="font-mono text-xl font-bold">{powerInfo ? powerInfo.battery_percentage + '%' : 'Unknown'}</p>
+                <p className="text-xs text-text-muted">{powerInfo ? (powerInfo.is_charging ? 'Charging' : 'Discharging') : 'No telemetry'}</p>
               </div>
             </div>
           </div>
@@ -192,22 +182,22 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
       <div className="glass rounded-xl p-6 border border-border/50">
         <h2 className="font-semibold mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
+          <button disabled title="Planned feature; unavailable in the preview" className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
             <div className="p-2 rounded-lg bg-primary/10 mb-3"><BarChart3 className="w-5 h-5 text-primary" /></div>
             <p className="font-medium">View Contributions</p>
             <p className="text-sm text-text-muted mt-1">See your impact</p>
           </button>
-          <button className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
+          <button disabled title="Planned feature; unavailable in the preview" className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
             <div className="p-2 rounded-lg bg-success/10 mb-3"><Award className="w-5 h-5 text-success" /></div>
             <p className="font-medium">Project Stories</p>
             <p className="text-sm text-text-muted mt-1">What you've helped</p>
           </button>
-          <button className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
+          <button disabled title="Planned feature; unavailable in the preview" className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
             <div className="p-2 rounded-lg bg-warning/10 mb-3"><Target className="w-5 h-5 text-warning" /></div>
             <p className="font-medium">Adjust Resources</p>
             <p className="text-sm text-text-muted mt-1">CPU, GPU, thermal limits</p>
           </button>
-          <button className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
+          <button disabled title="Planned feature; unavailable in the preview" className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
             <div className="p-2 rounded-lg bg-primary-light/10 mb-3"><FlaskConical className="w-5 h-5 text-primary-light" /></div>
             <p className="font-medium">Choose Causes</p>
             <p className="text-sm text-text-muted mt-1">Cancer, Alzheimer's, more</p>
