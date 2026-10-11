@@ -11,6 +11,7 @@ Uses Witness REST ingest endpoints. Detects existing records to avoid duplicatio
 """
 
 import argparse
+import json as jsonlib
 import os
 import ipaddress
 import urllib.request
@@ -86,7 +87,7 @@ class Transport:
         data = (
             None
             if json is None
-            else globals()["json"].dumps(json, allow_nan=False).encode()
+            else jsonlib.dumps(json, allow_nan=False).encode()
         )
         req = urllib.request.Request(
             url, data=data, headers={"Content-Type": "application/json"} if data else {}
@@ -99,7 +100,7 @@ class Transport:
             if len(body) > 2_000_000:
                 raise RuntimeError("Response exceeds bounded replay limit")
             result = (
-                globals()["json"].loads(body)
+                jsonlib.loads(body)
                 if body.startswith((b"{", b"["))
                 else body.decode()
             )

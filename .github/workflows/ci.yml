@@ -47,7 +47,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: seanebones-lang/witness
-          ref: 119463ae766f8bfbea6938dfd7b086d1e99afabb
+          ref: 2f1d557bd558d0d5c5f6ed4d73ed32685cd9f0f3
           path: witness-consumer
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --locked --manifest-path witness-consumer/Cargo.toml --package witness-api
