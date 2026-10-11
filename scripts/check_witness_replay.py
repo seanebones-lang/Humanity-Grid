@@ -156,6 +156,20 @@ def main():
                             for kind in ["observed", "inferred", "generated"]
                         }
                     )
+                    if iteration == 0:
+                        # A similarly named experiment must not enter the exact-label replay.
+                        replay.requests.post(
+                            base + "/api/ingest/observation",
+                            json={
+                                "quantity": "synthetic-prefix-fixture",
+                                "value": "123",
+                                "unit": "fixture",
+                                "instrument_id": "synthetic-fixture",
+                                "author_id": "synthetic:test",
+                                "labels": ["EXP-001-backup"],
+                                "domain": "synthetic-test",
+                            },
+                        )
                 if snapshots[0] != snapshots[1]:
                     raise RuntimeError("Replay changed records on reuse")
                 if not replay.verify_ingestion(base):
@@ -201,6 +215,7 @@ def main():
                             },
                             "second_replay": "same records and fields",
                             "conflicting_identity": "rejected without writes",
+                            "prefix_label": "EXP-001-backup excluded from EXP-001 replay",
                             "working_directory": "outside source",
                             "boundary": "historical replay only; no docking or model calls",
                             "generic_bridge": bridge_result,

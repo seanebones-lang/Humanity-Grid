@@ -159,7 +159,7 @@ These commands reanalyse the committed scores, without executing docking. This l
 
 ```bash
 python3.12 -m venv .venv
-.venv/bin/python -m pip install -r requirements-review.txt
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements-review.txt
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python src/compute-broker/scripts/validate_consensus.py --job-id EXP-001 --results-dir proofs/EXP-001-v1/outputs/vina --output /tmp/humanity-grid-consensus.json
 ```

@@ -1,12 +1,12 @@
 > **Pre-alpha component:** this document includes planned behavior. This component is not part of an installed, verified volunteer platform. Start with the repository root and the supported local Proof A reviewer path; do not infer scientific validity, deployed services, or independent execution from these design descriptions.
 
-# Scientific Pipeline
+# Scientific Pipeline: experimental scaffolding and proposed containers
 
 **Containerized scientific computing modules: AutoDock for virtual screening, OpenMM for molecular dynamics.**
 
-## Responsibilities
+## Planned responsibilities
 
-- Provide production-ready Docker containers for scientific workloads
+- Develop and independently verify bounded containers before any production use
 - AutoDock-GPU for high-throughput virtual screening
 - OpenMM for molecular dynamics simulations
 - Standardized interfaces (inputs/outputs) for Compute Broker
@@ -71,19 +71,12 @@
 - RAM: 16 GB
 - Runtime: ~2-24 hours per simulation
 
-## Container Build Process
+## Container release gate
 
-```bash
-# Build AutoDock-GPU container
-cd docker/autodock-gpu
-docker build -t ghcr.io/humanity-grid/autodock-gpu:1.2.0 .
-docker push ghcr.io/humanity-grid/autodock-gpu:1.2.0
-
-# Build OpenMM container
-cd docker/openmm
-docker build -t ghcr.io/humanity-grid/openmm:8.0.0 .
-docker push ghcr.io/humanity-grid/openmm:8.0.0
-```
+Container descriptions below are design requirements. This reviewer release
+provides no verified registry image or supported GPU execution path. Building
+or publishing images requires independently reviewed input/tool sources, sealed
+digests, resource and network limits, platform checks, and execution evidence.
 
 ## Content Addressing
 
@@ -156,7 +149,7 @@ EOF
 }
 ```
 
-## Architecture
+## Proposed architecture
 
 ```
 scientific-pipeline/
@@ -197,25 +190,14 @@ scientific-pipeline/
     └── test_openmm.py
 ```
 
-## Quick Start
+## Supported review entry point
 
-```bash
-# Build containers
-cd docker/autodock-gpu
-docker build -t ghcr.io/humanity-grid/autodock-gpu:1.2.0 .
+The former quick-start examples described future modules or unverified container
+paths. They are not supported installation instructions and are intentionally
+omitted here. No portal, model pipeline, or production container is released
+through this component document.
 
-cd ../openmm
-docker build -t ghcr.io/humanity-grid/openmm:8.0.0 .
-
-# Test AutoDock locally
-docker run --rm --gpus all \
-  -v $(pwd)/test_data:/input:ro \
-  -v $(pwd)/test_output:/output \
-  ghcr.io/humanity-grid/autodock-gpu:1.2.0
-
-# Test OpenMM locally
-docker run --rm --gpus all \
-  -v $(pwd)/test_data:/input:ro \
-  -v $(pwd)/test_output:/output \
-  ghcr.io/humanity-grid/openmm:8.0.0
-```
+Start with the [local Proof A reviewer workflow](../../docs/PROOF_A_REVIEW.md)
+and the [frozen artifact package](../../proofs/EXP-001-v1/README.md). Those checks
+do not run new experiments, invoke a model, publish data, or establish scientific
+validity. The design above is a proposal for implementation and separate review.
