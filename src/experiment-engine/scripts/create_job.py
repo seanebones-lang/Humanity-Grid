@@ -24,7 +24,9 @@ def main():
     parser.add_argument("--job-id", required=True, help="Job ID")
     parser.add_argument("--hypothesis-id", required=True, help="Hypothesis ID")
     parser.add_argument("--name", required=True, help="Experiment name")
-    parser.add_argument("--overrides", type=json.loads, default="{}", help="JSON overrides")
+    parser.add_argument(
+        "--overrides", type=json.loads, default="{}", help="JSON overrides"
+    )
     parser.add_argument("--output", type=Path, required=True, help="Output YAML file")
     args = parser.parse_args()
 

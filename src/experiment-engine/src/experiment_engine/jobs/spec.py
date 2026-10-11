@@ -144,7 +144,10 @@ class JobSpec(BaseModel):
         # Convert to canonical JSON
         canonical = json.dumps(data, sort_keys=True, default=str)
         digest = hashlib.sha256(canonical.encode()).hexdigest()
-        if self.provenance.spec_hash is not None and self.provenance.spec_hash != digest:
+        if (
+            self.provenance.spec_hash is not None
+            and self.provenance.spec_hash != digest
+        ):
             raise ValueError("Provided spec_hash does not match the job content")
         if self.hypothesis_id != self.provenance.hypothesis_id:
             raise ValueError("Provenance hypothesis ID must match the job")

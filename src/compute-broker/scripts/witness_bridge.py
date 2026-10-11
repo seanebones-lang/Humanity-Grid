@@ -156,7 +156,9 @@ def load_report(report_path: Path) -> dict[str, Any]:
         return json.load(f)
 
 
-def summarize_scores(results_dir: Path, work_unit_id: str, replicate: int) -> dict[str, Any]:
+def summarize_scores(
+    results_dir: Path, work_unit_id: str, replicate: int
+) -> dict[str, Any]:
     """Compute a small aggregate (n, mean, min affinity, hits) from parquet."""
     import polars as pl
 
@@ -185,7 +187,10 @@ def main() -> int:
     p.add_argument("--hypothesis", required=True)
     p.add_argument("--results-dir", type=Path, required=True)
     p.add_argument(
-        "--report", type=Path, required=True, help="consensus JSON from validate_consensus.py"
+        "--report",
+        type=Path,
+        required=True,
+        help="consensus JSON from validate_consensus.py",
     )
     p.add_argument("--domain", default="cancer-screening")
     p.add_argument("--pdb", default="1KE7", help="receptor PDB id for source_uri")
@@ -219,7 +224,9 @@ def main() -> int:
         or not isinstance(redundancy, int)
         or redundancy < 2
     ):
-        raise ValueError("Nonempty report for this job with at least two replicates required")
+        raise ValueError(
+            "Nonempty report for this job with at least two replicates required"
+        )
     threshold = report.get("threshold")
     if not isinstance(threshold, (int, float)) or not 0 <= threshold <= 1:
         raise ValueError("Finite threshold in [0, 1] required")
@@ -229,11 +236,15 @@ def main() -> int:
         uid = wu["work_unit_id"]
         if uid in prepared or Path(uid).name != uid or uid in (".", ".."):
             raise ValueError("Unique safe work-unit identifiers required")
-        dfs = [load_results(args.results_dir, uid, rep) for rep in range(1, redundancy + 1)]
+        dfs = [
+            load_results(args.results_dir, uid, rep) for rep in range(1, redundancy + 1)
+        ]
         correlations = {}
         for i in range(redundancy):
             for j in range(i + 1, redundancy):
-                correlations[f"rep{i + 1}_vs_rep{j + 1}"] = compute_consensus(dfs[i], dfs[j])
+                correlations[f"rep{i + 1}_vs_rep{j + 1}"] = compute_consensus(
+                    dfs[i], dfs[j]
+                )
         if set(wu.get("correlations", {})) != set(correlations) or any(
             not math.isfinite(wu["correlations"][key])
             or abs(wu["correlations"][key] - value) > 1e-12
@@ -244,7 +255,8 @@ def main() -> int:
         if wu.get("passed") is not passed or wu.get("errors"):
             raise ValueError("Report status/errors disagree with source score analysis")
         prepared[uid] = [
-            summarize_scores(args.results_dir, uid, rep) for rep in range(1, redundancy + 1)
+            summarize_scores(args.results_dir, uid, rep)
+            for rep in range(1, redundancy + 1)
         ]
         recomputed.extend(correlations.values())
     passed_count = sum(wu["passed"] for wu in units)

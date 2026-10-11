@@ -509,7 +509,7 @@ def main() -> int:
 
     # 3. Ingest 1 Generated record
     print("\n3. Ingesting Generated record...")
-    hypothesis_id = ingest_generation(witness_api)
+    ingest_generation(witness_api)
 
     # 4. Verify
     print("\n4. Verifying ingestion...")

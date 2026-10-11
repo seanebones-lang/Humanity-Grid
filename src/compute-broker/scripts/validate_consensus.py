@@ -31,19 +31,27 @@ def validate_scores(
 ) -> None:
     """Reject incomplete/ambiguous score sets before any consensus computation."""
     if key not in df.columns or score not in df.columns or len(df) < 2:
-        raise ValueError("At least two compounds with ID and affinity columns are required")
+        raise ValueError(
+            "At least two compounds with ID and affinity columns are required"
+        )
     ids = df[key].to_list()
-    if any(not isinstance(x, str) or not x.strip() for x in ids) or len(set(ids)) != len(ids):
+    if any(not isinstance(x, str) or not x.strip() for x in ids) or len(
+        set(ids)
+    ) != len(ids):
         raise ValueError("Compound IDs must be nonblank unique strings")
     values = df[score].to_list()
     if any(
-        isinstance(x, bool) or not isinstance(x, (int, float)) or not np.isfinite(x) for x in values
+        isinstance(x, bool) or not isinstance(x, (int, float)) or not np.isfinite(x)
+        for x in values
     ):
         raise ValueError("Affinity scores must be finite numeric values without nulls")
 
 
 def matched_scores(
-    df1: pl.DataFrame, df2: pl.DataFrame, key: str = "compound_id", score: str = "affinity_kcal_mol"
+    df1: pl.DataFrame,
+    df2: pl.DataFrame,
+    key: str = "compound_id",
+    score: str = "affinity_kcal_mol",
 ) -> pl.DataFrame:
     validate_scores(df1, key, score)
     validate_scores(df2, key, score)
@@ -57,7 +65,10 @@ def matched_scores(
 
 
 def compute_consensus(
-    df1: pl.DataFrame, df2: pl.DataFrame, key: str = "compound_id", score: str = "affinity_kcal_mol"
+    df1: pl.DataFrame,
+    df2: pl.DataFrame,
+    key: str = "compound_id",
+    score: str = "affinity_kcal_mol",
 ) -> float:
     """Pearson r over equal, complete, unique compound sets; undefined r is an error."""
     merged = matched_scores(df1, df2, key, score)
@@ -99,12 +110,19 @@ def detect_outliers_iqr(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Validate consensus between replicates")
+    parser = argparse.ArgumentParser(
+        description="Validate consensus between replicates"
+    )
     parser.add_argument("--job-id", required=True, help="Job ID")
     parser.add_argument(
-        "--results-dir", type=Path, required=True, help="Results directory with rep1/, rep2/, etc."
+        "--results-dir",
+        type=Path,
+        required=True,
+        help="Results directory with rep1/, rep2/, etc.",
     )
-    parser.add_argument("--redundancy", type=int, default=2, help="Number of replicates")
+    parser.add_argument(
+        "--redundancy", type=int, default=2, help="Number of replicates"
+    )
     parser.add_argument(
         "--threshold", type=float, default=0.8, help="Consensus correlation threshold"
     )
@@ -116,7 +134,9 @@ def main():
     threshold = args.threshold
 
     if redundancy < 2 or not np.isfinite(threshold) or not 0 <= threshold <= 1:
-        parser.error("redundancy must be at least 2 and threshold must be finite in [0, 1]")
+        parser.error(
+            "redundancy must be at least 2 and threshold must be finite in [0, 1]"
+        )
 
     # Find all work unit directories in rep1
     rep1_dir = results_dir / "rep1"
@@ -130,7 +150,10 @@ def main():
     expected = {d.name for d in work_unit_dirs}
     for rep in range(2, redundancy + 1):
         rep_dir = results_dir / f"rep{rep}"
-        if not rep_dir.is_dir() or {d.name for d in rep_dir.iterdir() if d.is_dir()} != expected:
+        if (
+            not rep_dir.is_dir()
+            or {d.name for d in rep_dir.iterdir() if d.is_dir()} != expected
+        ):
             parser.error(f"rep{rep} must contain the same work units as rep1")
     print(f"Found {len(work_unit_dirs)} work units")
 
@@ -179,7 +202,11 @@ def main():
                     print(f"  {pair_key}: r = {corr:.4f}")
 
             # Check if all pairs pass threshold
-            min_corr = min(wu_report["correlations"].values()) if wu_report["correlations"] else 0.0
+            min_corr = (
+                min(wu_report["correlations"].values())
+                if wu_report["correlations"]
+                else 0.0
+            )
             if min_corr < threshold:
                 wu_report["passed"] = False
                 wu_report["errors"].append(
@@ -196,7 +223,9 @@ def main():
                     )
             wu_report["outliers"] = len(outlier_ids)
             wu_report["outlier_compounds"] = sorted(outlier_ids)
-            wu_report["outlier_basis"] = "IQR of absolute score differences for each replicate pair"
+            wu_report["outlier_basis"] = (
+                "IQR of absolute score differences for each replicate pair"
+            )
 
         except Exception as e:
             wu_report["passed"] = False
@@ -208,8 +237,12 @@ def main():
     # Summary
     report["summary"]["total"] = len(report["work_units"])
     report["summary"]["passed"] = sum(1 for wu in report["work_units"] if wu["passed"])
-    report["summary"]["failed"] = report["summary"]["total"] - report["summary"]["passed"]
-    report["summary"]["mean_correlation"] = float(np.mean(correlations)) if correlations else 0.0
+    report["summary"]["failed"] = (
+        report["summary"]["total"] - report["summary"]["passed"]
+    )
+    report["summary"]["mean_correlation"] = (
+        float(np.mean(correlations)) if correlations else 0.0
+    )
 
     print(f"\n{'=' * 50}")
     print(

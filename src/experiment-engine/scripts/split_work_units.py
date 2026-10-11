@@ -18,8 +18,12 @@ from experiment_engine.jobs.spec import JobSpec, SplitStrategy
 def main():
     parser = argparse.ArgumentParser(description="Split JobSpec into work unit configs")
     parser.add_argument("job_spec", type=Path, help="JobSpec YAML file")
-    parser.add_argument("--output", type=Path, default=Path("work_units"), help="Output directory")
-    parser.add_argument("--library-path", type=Path, help="Path to compound library file")
+    parser.add_argument(
+        "--output", type=Path, default=Path("work_units"), help="Output directory"
+    )
+    parser.add_argument(
+        "--library-path", type=Path, help="Path to compound library file"
+    )
     args = parser.parse_args()
 
     # Load job spec
@@ -53,7 +57,9 @@ def main():
     docking_params = default_params.copy()
     if config_input:
         if config_input.format == "json" and not config_input.parameters:
-            parser.error("External parameter files are not loaded; provide explicit parameters")
+            parser.error(
+                "External parameter files are not loaded; provide explicit parameters"
+            )
         docking_params.update(config_input.parameters)
 
     for i in range(n_units):
