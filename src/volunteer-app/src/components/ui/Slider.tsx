@@ -12,34 +12,30 @@ export interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
 }
 
 const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
-  ({ className, value, onValueChange, max = 100, min = 0, step = 1, disabled, ...props }, ref) => {
+  ({ className, value, onValueChange, max = 100, min = 0, step = 1, disabled, style, ...props }, ref) => {
+    const progress = max > min ? Math.max(0, Math.min(100, ((value[0] - min) / (max - min)) * 100)) : 0
     return (
-      <div className="relative w-full" data-disabled={disabled}>
-        <input
-          type="range"
-          ref={ref}
-          className={cn(
-            'appearance-none w-full h-2 bg-surface rounded-full cursor-pointer',
-            'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background',
-            'disabled:opacity-50 disabled:cursor-not-allowed',
-            className
-          )}
-          min={min}
-          max={max}
-          step={step}
-          value={value[0]}
-          onChange={(e) => onValueChange([Number(e.target.value)])}
-          disabled={disabled}
-          {...props}
-        />
-        <div
-          className="absolute h-full bg-primary rounded-full pointer-events-none"
-          style={{
-            left: '0%',
-            width: `${((value[0] - min) / (max - min)) * 100}%`,
-          }}
-        />
-      </div>
+      <input
+        type="range"
+        ref={ref}
+        className={cn(
+          'preview-slider w-full cursor-pointer',
+          'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          className
+        )}
+        min={min}
+        max={max}
+        step={step}
+        value={value[0]}
+        style={{
+          backgroundImage: `linear-gradient(to right, var(--color-primary) ${progress}%, var(--color-border) ${progress}%)`,
+          ...style,
+        }}
+        onChange={(e) => onValueChange([Number(e.target.value)])}
+        disabled={disabled}
+        {...props}
+      />
     )
   }
 )

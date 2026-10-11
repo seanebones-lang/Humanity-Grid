@@ -73,6 +73,47 @@ body {
   outline-offset: 2px;
 }
 
+/* Preview range controls */
+.preview-slider {
+  display: block;
+  appearance: none;
+  height: 24px;
+  background-color: transparent;
+  background-size: 100% 8px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.preview-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.preview-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -4px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.preview-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.preview-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
 /* Selection */
 ::selection {
   background-color: var(--color-primary);
