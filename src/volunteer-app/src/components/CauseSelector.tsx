@@ -112,12 +112,12 @@ export default function CauseSelector({ settings, onUpdate }: CauseSelectorProps
             {totalPercentage < 100 ? `${100 - totalPercentage}% unallocated` : `${totalPercentage - 100}% overallocated`}
           </p>
         )}
-        {totalPercentage > 0 && totalPercentage !== 100 && (
+        {causes.some(c => c.enabled) && (
           <button
             onClick={normalizePercentages}
             className="mt-4 w-full sm:w-auto px-4 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-sm font-medium transition-colors"
           >
-            Auto-balance ({Math.floor(100 / causes.filter(c => c.enabled).length)}% each)
+            Split evenly across selected causes
           </button>
         )}
       </div>
