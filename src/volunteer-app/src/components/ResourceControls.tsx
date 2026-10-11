@@ -106,7 +106,7 @@ export default function ResourceControls({ systemInfo, thermalInfo, powerInfo, s
             </div>
             <div>
               <label className="text-sm text-text-muted">Cores at Limit</label>
-              <p className="font-mono text-lg">{Math.max(1, Math.round((systemInfo?.cpus.length ?? 1) * ((localSettings?.cpu_limit_percent ?? 30) / 100)))}</p>
+              <p className="font-mono text-lg">{systemInfo ? Math.max(1, Math.round(systemInfo.cpus.length * ((localSettings?.cpu_limit_percent ?? 30) / 100))) : 'Unknown'}</p>
             </div>
           </div>
         </div>
@@ -311,6 +311,7 @@ export default function ResourceControls({ systemInfo, thermalInfo, powerInfo, s
               <label className="text-sm text-text-muted">Weekdays Start</label>
               <input
                 type="time"
+                aria-label="Preview weekday schedule"
                 value={localSettings?.schedule.weekday_start ?? '22:00'}
                 onChange={(e) => updateSetting('schedule', { ...localSettings!.schedule, weekday_start: e.target.value })}
                 className="w-full mt-1 px-3 py-2 rounded-lg bg-surface border border-border text-text focus:border-primary focus:outline-none"
@@ -320,6 +321,7 @@ export default function ResourceControls({ systemInfo, thermalInfo, powerInfo, s
               <label className="text-sm text-text-muted">Weekdays End</label>
               <input
                 type="time"
+                aria-label="Preview weekday schedule"
                 value={localSettings?.schedule.weekday_end ?? '07:00'}
                 onChange={(e) => updateSetting('schedule', { ...localSettings!.schedule, weekday_end: e.target.value })}
                 className="w-full mt-1 px-3 py-2 rounded-lg bg-surface border border-border text-text focus:border-primary focus:outline-none"

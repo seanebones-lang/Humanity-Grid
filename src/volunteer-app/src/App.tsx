@@ -153,7 +153,7 @@ function App() {
       {/* Sidebar */}
       <aside className={cn(
         'fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border transform transition-transform duration-300 ease-in-out',
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        sidebarOpen ? 'translate-x-0' : 'invisible -translate-x-full lg:visible lg:translate-x-0'
       )}>
         <div className="flex h-full flex-col">
           {/* Header */}
@@ -271,6 +271,7 @@ function App() {
               powerInfo={powerInfo}
               boincStatus={boincStatus}
               contributions={contributions}
+              onNavigate={setActiveTab}
             />
           )}
 

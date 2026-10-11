@@ -8,6 +8,7 @@ interface DashboardProps {
   powerInfo: PowerInfo | null
   boincStatus: BoincStatus | null
   contributions: ContributionStats | null
+  onNavigate: (tab: 'dashboard' | 'causes' | 'resources' | 'stories' | 'teams' | 'settings') => void
 }
 
 const statCards = [
@@ -17,7 +18,7 @@ const statCards = [
   { label: 'Papers Published', value: '0', icon: Award, color: 'text-primary-light' },
 ]
 
-export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincStatus, contributions }: DashboardProps) {
+export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincStatus, contributions, onNavigate }: DashboardProps) {
   const maxTemp = thermalInfo?.temperatures.reduce((max, t) => Math.max(max, t.temperature), 0) ?? 0
   const isThermalThrottling = maxTemp > 70
 
@@ -27,7 +28,7 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-surface to-background p-6 lg:p-8 border border-primary/20">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--color-primary)/10,transparent_70%)]" />
         <div className="relative z-10">
-          <h1 className="text-3xl lg:text-4xl font-bold mb-2 gradient-text">Welcome back</h1>
+          <h1 className="text-3xl lg:text-4xl font-bold mb-2 gradient-text">Welcome to the preview</h1>
           <p className="text-text-muted mb-6 max-w-xl">No volunteer account or computing service is connected. This interface previews planned controls; it reports no completed research.</p>
 
         </div>
@@ -141,8 +142,8 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={cn('p-2 rounded-lg', isThermalThrottling ? 'bg-warning/10' : 'bg-success/10')}>
-                  <Thermometer className={cn('w-5 h-5', isThermalThrottling ? 'text-warning' : 'text-success')} />
+                <div className={cn('p-2 rounded-lg', !thermalInfo ? 'bg-surface' : isThermalThrottling ? 'bg-warning/10' : 'bg-success/10')}>
+                  <Thermometer className={cn('w-5 h-5', !thermalInfo ? 'text-text-muted' : isThermalThrottling ? 'text-warning' : 'text-success')} />
                 </div>
                 <div>
                   <p className="font-medium">Temperature</p>
@@ -150,7 +151,7 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
                 </div>
               </div>
               <div className="text-right">
-                <p className={cn('font-mono text-xl font-bold', isThermalThrottling ? 'text-warning' : 'text-success')}>{thermalInfo ? maxTemp.toFixed(1) + '°C' : 'Unknown'}</p>
+                <p className={cn('font-mono text-xl font-bold', !thermalInfo ? 'text-text-muted' : isThermalThrottling ? 'text-warning' : 'text-success')}>{thermalInfo ? maxTemp.toFixed(1) + '°C' : 'Unknown'}</p>
                 <p className="text-xs text-text-muted">Max observed</p>
               </div>
             </div>
@@ -182,22 +183,22 @@ export default function Dashboard({ systemInfo, thermalInfo, powerInfo, boincSta
       <div className="glass rounded-xl p-6 border border-border/50">
         <h2 className="font-semibold mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <button disabled title="Planned feature; unavailable in the preview" className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
+          <button onClick={() => onNavigate('stories')} className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
             <div className="p-2 rounded-lg bg-primary/10 mb-3"><BarChart3 className="w-5 h-5 text-primary" /></div>
             <p className="font-medium">View Contributions</p>
             <p className="text-sm text-text-muted mt-1">See your impact</p>
           </button>
-          <button disabled title="Planned feature; unavailable in the preview" className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
+          <button onClick={() => onNavigate('stories')} className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
             <div className="p-2 rounded-lg bg-success/10 mb-3"><Award className="w-5 h-5 text-success" /></div>
             <p className="font-medium">Project Stories</p>
             <p className="text-sm text-text-muted mt-1">What you've helped</p>
           </button>
-          <button disabled title="Planned feature; unavailable in the preview" className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
+          <button onClick={() => onNavigate('resources')} className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
             <div className="p-2 rounded-lg bg-warning/10 mb-3"><Target className="w-5 h-5 text-warning" /></div>
             <p className="font-medium">Adjust Resources</p>
             <p className="text-sm text-text-muted mt-1">CPU, GPU, thermal limits</p>
           </button>
-          <button disabled title="Planned feature; unavailable in the preview" className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
+          <button onClick={() => onNavigate('causes')} className="p-4 rounded-xl bg-surface/50 border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left">
             <div className="p-2 rounded-lg bg-primary-light/10 mb-3"><FlaskConical className="w-5 h-5 text-primary-light" /></div>
             <p className="font-medium">Choose Causes</p>
             <p className="text-sm text-text-muted mt-1">Cancer, Alzheimer's, more</p>
