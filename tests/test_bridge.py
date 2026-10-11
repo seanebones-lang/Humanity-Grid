@@ -34,6 +34,7 @@ class BridgeTests(unittest.TestCase):
 
         class Handler(BaseHTTPRequestHandler):
             def do_POST(self):
+                self.rfile.read(int(self.headers.get("Content-Length", "0")))
                 calls.append(self.path)
                 self.send_response(307)
                 self.send_header("Location", "/redirect-target")
@@ -52,13 +53,16 @@ class BridgeTests(unittest.TestCase):
             oversized = False
 
             def do_POST(self):
-                self.send_response(200)
-                self.end_headers()
-                self.wfile.write(
+                self.rfile.read(int(self.headers.get("Content-Length", "0")))
+                body = (
                     b"x" * 2_000_001
                     if self.oversized
                     else b'{"id":"00000000-0000-0000-0000-000000000001"}'
                 )
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
 
             def log_message(self, *args):
                 pass
