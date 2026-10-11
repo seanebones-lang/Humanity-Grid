@@ -38,8 +38,8 @@ For attribution, reuse, and packaged-artifact boundaries, see
 [the EXP-001 artifact-rights note](proofs/EXP-001-v1/LICENSES.md).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://img.shields.io/badge/rust-1.80+-orange.svg)](https://www.rust-lang.org/)
-[![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/)
+[![Rust](https://img.shields.io/badge/rust-tested_1.95-orange.svg)](https://www.rust-lang.org/)
+[![Python](https://img.shields.io/badge/reviewer_python-3.12-blue.svg)](https://www.python.org/)
 
 ---
 
@@ -80,23 +80,27 @@ or volunteer platform release artifact yet. A pinned `requirements-review.txt` n
 development work after completing the Proof A review path.
 
 See [Proof A: scientific review and local replay](docs/PROOF_A_REVIEW.md) for
-the only currently supported installation and use instructions.
+the supported reviewer installation and use instructions. Contributors can also
+run the [browser interface design preview](src/volunteer-app/README.md); it has
+no native monitoring or volunteer computation. CI verifies locked dependencies,
+the complete proof package, reviewer tools, the web build, and real deposits
+against a pinned Witness revision.
 
 ### Project Structure
 
 ```
 humanity-grid/
-├── SPEC.md                 # This specification
+├── SPEC.md                 # Long-term design specification
 ├── README.md               # This file
 ├── LICENSE                 # MIT License
 ├── docs/                   # Architecture, API, contributor guides
 ├── src/
-│   ├── research-scout/     # Literature ingestion, hypothesis generation
+│   ├── research-scout/     # Research-scout development scaffold
 │   ├── experiment-engine/  # Job definitions, datasets, provenance
-│   ├── compute-broker/     # BOINC adapter, workload management
+│   ├── compute-broker/     # Local score review / bridge; broker scaffold
 │   ├── scientific-pipeline/# AutoDock, OpenMM containers
 │   ├── open-results/       # Data portal, notebooks, API
-│   └── volunteer-app/      # Tauri (Rust + Web UI) cross-platform app
+│   └── volunteer-app/      # Web design preview; unsupported native scaffold
 ├── tests/                  # Integration tests
 ├── scripts/                # Dev ops, deployment, CI helpers
 └── docker/                 # Dockerfiles for workloads

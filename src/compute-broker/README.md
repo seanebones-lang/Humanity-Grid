@@ -6,6 +6,12 @@ The validator requires matching complete work-unit and compound sets, unique IDs
 
 The bridge recomputes report correlations and checks all source files before its first write. Each replica's minimum score comes from its own file. Its inference explicitly states that those minimum-score premises do not contain the complete raw vectors. It makes no model call and emits no invented Research Scout generation. Writes are sequential and not idempotent: use a disposable local database; partial writes can remain if a later HTTP request fails. Use root `ingest_exp001.py` for the bounded historical example's verified reuse behavior.
 
+HTTP requests allow only a plain loopback base URL, disable environment proxies
+and redirects, time out after 30 seconds, and cap each response at 2 MB. The
+default instrument identifies supplied local score files. Use `--instrument-id`
+and `--instrument-name` to declare a specific source; the bridge does not verify
+that identity or attest that a named program executed.
+
 Example, from the repository root:
 
 ```bash

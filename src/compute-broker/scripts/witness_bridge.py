@@ -2,16 +2,14 @@
 """
 Grid -> Witness bridge.
 
-Deposits the evidence trail for a completed distributed experiment into a
+Deposits a local score-file review into a
 Witness instance using the REST ingest endpoints, keeping Witness's three
 epistemic categories honest:
 
-  Observed   <- one ProvenanceNode per raw work-unit result (parquet scores,
-                job spec, container digest)
+  Observed   <- one minimum-score aggregate per supplied replicate file
   Inferred   <- consensus/voting across redundant replicates, with the
                 observed nodes as explicit premises and a falsifier
-  Generated  <- Research Scout hypothesis prose, model + prompt recorded,
-                never auto-promoted to Observed
+  Generated  <- none; this script does not invoke a model
 
 Why this exists: Witness is the evidence kernel (the long-lived, queryable
 memory of what a grid actually measured). Grid is the machine that does the
@@ -37,6 +35,9 @@ import sys
 import urllib.request
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
+import ipaddress
+from uuid import UUID
 
 # Affinity scores above this (kcal/mol) are considered non-hits in the
 # "candidates, not cures" framing. This is a validation-choice constant, not a
@@ -44,15 +45,56 @@ from typing import Any
 HIT_THRESHOLD_KCAL = -8.0
 
 
+def local_url(base: str) -> str:
+    target = urlsplit(base)
+    if (
+        target.scheme != "http"
+        or target.username
+        or target.password
+        or target.path not in ("", "/")
+        or target.query
+        or target.fragment
+        or not target.hostname
+    ):
+        raise ValueError("Witness must be a plain loopback HTTP base URL")
+    # Access port to reject malformed port numbers before any request.
+    target.port
+    if (
+        target.hostname != "localhost"
+        and not ipaddress.ip_address(target.hostname).is_loopback
+    ):
+        raise ValueError("This unauthenticated bridge supports loopback Witness only")
+    return base.rstrip("/")
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):
+        raise RuntimeError("Redirects are not allowed during local deposit")
+
+
 def _post(witness: str, endpoint: str, payload: dict[str, Any]) -> dict[str, Any]:
+    if endpoint not in (
+        "/api/ingest/observation",
+        "/api/ingest/inference",
+        "/api/ingest/generation",
+    ):
+        raise ValueError("Unsupported ingest endpoint")
     req = urllib.request.Request(
-        f"{witness}{endpoint}",
-        data=json.dumps(payload).encode("utf-8"),
+        f"{local_url(witness)}{endpoint}",
+        data=json.dumps(payload, allow_nan=False).encode("utf-8"),
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
-        return json.loads(resp.read().decode("utf-8"))
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+    with opener.open(req, timeout=30) as resp:
+        body = resp.read(2_000_001)
+        if len(body) > 2_000_000:
+            raise RuntimeError("Witness response exceeds bounded deposit limit")
+        result = json.loads(body)
+        if not isinstance(result, dict) or not isinstance(result.get("id"), str):
+            raise ValueError("Witness ingest response must contain a node UUID")
+        UUID(result["id"])
+        return result
 
 
 def deposit_observation(
@@ -141,7 +183,7 @@ def deposit_generation(
             "generator": generator,
             "model_version": model_version,
             "prompt": prompt,
-            "human_reviewed": False,  # must be human-approved before promotion
+            "human_reviewed": False,  # review does not change epistemic type
             "author_id": author_id,
             "author_name": generator,
             "domain": domain,
@@ -194,27 +236,25 @@ def main() -> int:
     )
     p.add_argument("--domain", default="cancer-screening")
     p.add_argument("--pdb", default="1KE7", help="receptor PDB id for source_uri")
+    p.add_argument(
+        "--instrument-id",
+        default="local:score-file-review",
+        help="Declared source instrument identity; not verified by this bridge",
+    )
+    p.add_argument("--instrument-name", default="Local supplied score files")
     args = p.parse_args()
 
     from validate_consensus import compute_consensus, load_results
-    from urllib.parse import urlsplit
-    import ipaddress
 
-    target = urlsplit(args.witness)
+    args.witness = local_url(args.witness)
     if (
-        target.scheme != "http"
-        or target.username
-        or target.password
-        or target.path not in ("", "/")
-        or target.query
-        or target.fragment
+        not args.instrument_id.strip()
+        or not args.instrument_name.strip()
+        or not args.hypothesis.strip()
     ):
-        raise ValueError("Witness must be a plain loopback HTTP base URL")
-    if (
-        target.hostname != "localhost"
-        and not ipaddress.ip_address(target.hostname or "").is_loopback
-    ):
-        raise ValueError("This unauthenticated bridge supports loopback Witness only")
+        raise ValueError(
+            "Nonblank source instrument and hypothesis identifiers required"
+        )
     report = load_report(args.report)
     units = report.get("work_units", [])
     redundancy = report.get("redundancy", 0)
@@ -279,7 +319,7 @@ def main() -> int:
         f"Loaded consensus report: {report['summary']['passed']}/{report['summary']['total']} work units passed"
     )
 
-    # 1) Observed: the job spec + each raw score aggregate is an observation.
+    # 1) Observed: each supplied replicate's minimum-score aggregate.
     premise_ids: list[str] = []
     for wu in report.get("work_units", []):
         wu_id = wu["work_unit_id"]
@@ -294,8 +334,8 @@ def main() -> int:
                 quantity="docking_affinity_best",
                 value=value,
                 unit="kcal/mol",
-                instrument_id="autodock:vina1.2",
-                instrument_name="AutoDock Vina (CPU)",
+                instrument_id=args.instrument_id,
+                instrument_name=args.instrument_name,
                 node_id=nid,
                 domain=args.domain,
                 source_uri=uri,
@@ -309,7 +349,7 @@ def main() -> int:
     consensus_id = deposit_inference(
         args.witness,
         claim=(
-            f"Consensus for {args.job_id}: {report['summary']['passed']}/"
+            f"Score-file consensus for {args.job_id} (hypothesis {args.hypothesis}): {report['summary']['passed']}/"
             f"{report['summary']['total']} work units reproduced within threshold "
             f"(r>={report['threshold']}); mean corr {report['summary']['mean_correlation']:.3f}"
         ),

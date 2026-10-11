@@ -17,9 +17,89 @@ sys.path.insert(0, str(ROOT))
 import ingest_exp001 as replay
 
 
+def check_bridge(base, directory):
+    """Deposit distinct synthetic replica files through the real HTTP API."""
+    import polars as pl
+
+    results = directory / "synthetic-scores"
+    for replicate, scores in [(1, [-6.0, -7.0, -8.0]), (2, [-6.2, -7.2, -8.2])]:
+        unit = results / f"rep{replicate}" / "fixture"
+        unit.mkdir(parents=True)
+        pl.DataFrame(
+            {"compound_id": ["a", "b", "c"], "affinity_kcal_mol": scores}
+        ).write_parquet(unit / "results.parquet")
+    report = directory / "synthetic-consensus.json"
+    common = ["--job-id", "synthetic-integration", "--results-dir", str(results)]
+    for arguments in [
+        [
+            str(ROOT / "src/compute-broker/scripts/validate_consensus.py"),
+            *common,
+            "--output",
+            str(report),
+        ],
+        [
+            str(ROOT / "src/compute-broker/scripts/witness_bridge.py"),
+            *common,
+            "--hypothesis",
+            "synthetic-fixture",
+            "--report",
+            str(report),
+            "--witness",
+            base,
+            "--domain",
+            "synthetic-integration",
+        ],
+    ]:
+        process = subprocess.run(
+            [sys.executable, *arguments], capture_output=True, text=True, timeout=30
+        )
+        if process.returncode:
+            raise RuntimeError(process.stderr + process.stdout)
+    records = {}
+    for kind in ("observed", "inferred", "generated"):
+        records[kind] = replay.requests.get(
+            base + "/api/nodes",
+            params={"type": kind, "domain": "synthetic-integration", "limit": 100},
+        ).json()["nodes"]
+    if {kind: len(nodes) for kind, nodes in records.items()} != {
+        "observed": 2,
+        "inferred": 1,
+        "generated": 0,
+    }:
+        raise RuntimeError("Generic bridge produced unexpected node types/counts")
+    observed = records["observed"]
+    if sorted(
+        node["payload"]["measurement"]["value"]["numeric"] for node in observed
+    ) != [-8.2, -8.0]:
+        raise RuntimeError("Generic bridge lost the distinct source replicate values")
+    if any(
+        node["payload"]["measurement"]["instrument"]["id"] != "local:score-file-review"
+        for node in observed
+    ):
+        raise RuntimeError("Generic bridge misattributed the supplied score files")
+    inference = records["inferred"][0]
+    expected = {node["id"] for node in observed}
+    if (
+        set(inference["parents"]) != expected
+        or set(inference["payload"]["derivation"]["premises"]) != expected
+    ):
+        raise RuntimeError("Generic bridge inference lost its actual source premises")
+    return {
+        "counts": {kind: len(nodes) for kind, nodes in records.items()},
+        "distinct_replicates": [-8.0, -8.2],
+        "premises": "actual observation IDs",
+        "boundary": "synthetic local files; no model or docking run",
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path, required=True)
+    parser.add_argument(
+        "--check-bridge",
+        action="store_true",
+        help="Also check generic bridge with locked reviewer dependencies",
+    )
     args = parser.parse_args()
     binary = args.binary.resolve()
     with socket.socket() as probe:
@@ -107,6 +187,11 @@ def main():
                     raise RuntimeError(
                         "Conflicting replay was not rejected without new writes"
                     )
+                bridge_result = (
+                    check_bridge(base, directory)
+                    if args.check_bridge
+                    else "not requested"
+                )
                 print(
                     json.dumps(
                         {
@@ -118,6 +203,7 @@ def main():
                             "conflicting_identity": "rejected without writes",
                             "working_directory": "outside source",
                             "boundary": "historical replay only; no docking or model calls",
+                            "generic_bridge": bridge_result,
                         },
                         indent=2,
                     )

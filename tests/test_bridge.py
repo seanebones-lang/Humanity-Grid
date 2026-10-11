@@ -4,6 +4,10 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from contextlib import contextmanager
+from threading import Thread
+import os
 import polars as pl
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +17,91 @@ import witness_bridge as b
 
 
 class BridgeTests(unittest.TestCase):
+    @contextmanager
+    def server(self, handler):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            yield f"http://127.0.0.1:{server.server_port}"
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
+
+    def test_transport_rejects_redirects_without_following_them(self):
+        calls = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                calls.append(self.path)
+                self.send_response(307)
+                self.send_header("Location", "/redirect-target")
+                self.end_headers()
+
+            def log_message(self, *args):
+                pass
+
+        with self.server(Handler) as base:
+            with self.assertRaises(RuntimeError):
+                b._post(base, "/api/ingest/observation", {"fixture": True})
+        self.assertEqual(calls, ["/api/ingest/observation"])
+
+    def test_transport_ignores_environment_proxy_and_bounds_response(self):
+        class Handler(BaseHTTPRequestHandler):
+            oversized = False
+
+            def do_POST(self):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(
+                    b"x" * 2_000_001
+                    if self.oversized
+                    else b'{"id":"00000000-0000-0000-0000-000000000001"}'
+                )
+
+            def log_message(self, *args):
+                pass
+
+        with (
+            self.server(Handler) as base,
+            patch.dict(
+                os.environ,
+                {
+                    "http_proxy": "http://127.0.0.1:1",
+                    "HTTP_PROXY": "http://127.0.0.1:1",
+                    "no_proxy": "",
+                    "NO_PROXY": "",
+                },
+            ),
+        ):
+            self.assertEqual(
+                b._post(base, "/api/ingest/observation", {})["id"],
+                "00000000-0000-0000-0000-000000000001",
+            )
+            Handler.oversized = True
+            with self.assertRaises(RuntimeError):
+                b._post(base, "/api/ingest/observation", {})
+
+    def test_transport_rejects_nonlocal_targets_and_nonfinite_payloads(self):
+        with patch.object(b.urllib.request, "build_opener") as opener:
+            for target in [
+                "https://127.0.0.1",
+                "http://example.com",
+                "http://localhost:bad",
+                "http://localhost?x=1",
+                "http://user@localhost",
+            ]:
+                with self.assertRaises(ValueError):
+                    b._post(target, "/api/ingest/observation", {})
+            with self.assertRaises(ValueError):
+                b._post(
+                    "http://127.0.0.1",
+                    "/api/ingest/observation",
+                    {"value": float("nan")},
+                )
+            opener.assert_not_called()
+
     def fixture(self, root):
         for rep, scores in [(1, [-6.0, -7.0, -8.0]), (2, [-6.2, -7.2, -8.2])]:
             d = root / f"rep{rep}" / "unit"

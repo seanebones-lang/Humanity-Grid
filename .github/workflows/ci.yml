@@ -16,6 +16,8 @@ jobs:
       - run: python -m pip install -r requirements-review.txt
       - run: python -m pip install ./src/experiment-engine
       - run: python -m pip check
+      - run: python -m pip install pip-audit==2.10.1
+      - run: python -m pip_audit --no-deps --disable-pip -r requirements-review.txt
       - name: Installed model package outside checkout
         run: cd /tmp && python -c "from experiment_engine.jobs.spec import JobSpec; print(JobSpec.__name__)"
       - run: python proofs/EXP-001-v1/tools/verify.py
@@ -40,8 +42,6 @@ jobs:
 
   witness-replay:
     runs-on: ubuntu-latest
-    env:
-      SQLX_OFFLINE: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -51,4 +51,8 @@ jobs:
           path: witness-consumer
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --locked --manifest-path witness-consumer/Cargo.toml --package witness-api
-      - run: python3 scripts/check_witness_replay.py --binary witness-consumer/target/debug/witness-api
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-review.txt
+      - run: python scripts/check_witness_replay.py --binary witness-consumer/target/debug/witness-api --check-bridge
