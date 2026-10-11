@@ -1,8 +1,10 @@
-# Open Results
+> **Pre-alpha component:** this document includes planned behavior. This component is not part of an installed, verified volunteer platform. Start with the repository root and the supported local Proof A reviewer path; do not infer scientific validity, deployed services, or independent execution from these design descriptions.
+
+# Open Results: proposed portal
 
 **Public data portal, reproducible analyses, and open science publishing for Humanity Grid.**
 
-## Responsibilities
+## Planned responsibilities
 
 - Host all experimental data, results, and analyses publicly
 - Provide reproducible computational notebooks (Jupyter/Quarto)
@@ -10,7 +12,7 @@
 - Enable download of raw data, processed results, and metadata
 - Support citation and attribution
 
-## Data Portal Structure
+## Proposed portal structure
 
 ```
 open-results/
@@ -136,7 +138,7 @@ results = pd.read_parquet("s3://humanity-grid/projects/H-9182/results/EXP-H9182-
 | 1 | CHEMBL123 | -10.2 | Drug X | EGFR inhibitor |
 ```
 
-## API Endpoints
+## Proposed API endpoints
 
 | Endpoint | Description |
 |----------|-------------|
@@ -149,7 +151,7 @@ results = pd.read_parquet("s3://humanity-grid/projects/H-9182/results/EXP-H9182-
 | `GET /api/v1/datasets/{id}` | Dataset metadata |
 | `GET /api/v1/stats` | Global compute statistics |
 
-## Architecture
+## Proposed architecture
 
 ```
 open-results/
@@ -183,28 +185,14 @@ open-results/
         └── consensus_report.qmd
 ```
 
-## Quick Start
+## Supported review entry point
 
-```bash
-cd src/open-results
-uv pip install -e .
+The former quick-start examples described future modules or unverified container
+paths. They are not supported installation instructions and are intentionally
+omitted here. No portal, model pipeline, or production container is released
+through this component document.
 
-# Publish a completed project
-python -m open_results.publishing.publish_project \
-  --project-id H-9182 \
-  --results-dir /path/to/results \
-  --output s3://humanity-grid/projects/H-9182/
-
-# Generate analysis notebook
-python -m open_results.notebooks.generator \
-  --job-id EXP-H9182-VS-001 \
-  --template virtual_screening \
-  --output notebooks/H-9182/
-
-# Run notebook headless
-python -m open_results.notebooks.runner \
-  notebooks/H-9182/EXP-H9182-VS-001_analysis.qmd
-
-# Start API server
-python -m open_results.portal.api
-```
+Start with the [local Proof A reviewer workflow](../../docs/PROOF_A_REVIEW.md)
+and the [frozen artifact package](../../proofs/EXP-001-v1/README.md). Those checks
+do not run new experiments, invoke a model, publish data, or establish scientific
+validity. The design above is a proposal for implementation and separate review.

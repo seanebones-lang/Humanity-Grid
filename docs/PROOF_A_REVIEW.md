@@ -36,7 +36,7 @@ of six docking scores does not validate biological affinity predictions.
 ## Install prerequisites
 
 - Git
-- Python 3.9 or later and `requests` for record replay
+- Python 3.9 or later; record replay uses only the standard library
 - Current stable Rust and Cargo for Witness
 - Docker, AutoDock Vina, Open Babel, and the scientific Python dependencies
   only if you intend to re-execute the docking run. Re-execution is not a
@@ -58,14 +58,13 @@ the embedded frozen values into newly independently observed scientific data.
 Terminal 1, from the Witness checkout:
 
 ```bash
-touch proof-a-review.db && DATABASE_URL="sqlite://$PWD/proof-a-review.db" PORT=18080 \
-  cargo run --release --package witness-api
+DATABASE_URL="sqlite://$PWD/proof-a-review.db" HOST=127.0.0.1 PORT=18080 \
+  cargo run --release --locked --package witness-api
 ```
 
 Terminal 2, from the Humanity Grid checkout:
 
 ```bash
-python3 -m pip install --user requests && \
 python3 ingest_exp001.py --witness http://127.0.0.1:18080
 ```
 
@@ -116,7 +115,7 @@ remain incomplete. Closing those gaps is the first Proof B readiness task.
 | Symptom | Resolution |
 | --- | --- |
 | `Cannot reach Witness API` | Start the Witness server first and make sure the replay URL and `PORT` match. |
-| `ModuleNotFoundError: requests` | Run `python3 -m pip install --user requests`. |
+| Lookup, pagination, or matching-payload error | Replay refuses to guess or overwrite; use an isolated fresh database and preserve the failure. |
 | `400` from an ingest route | Confirm the Witness checkout contains the current REST-ingest API and that the server was restarted after building. |
 | `500` from an ingest route | Preserve the terminal output and request context. Do not retry against a shared database until the cause is understood. |
 | Record count is greater than expected | Use a fresh `proof-a-review.db`. The script deliberately reuses matching EXP-001 records, but a manually altered database can contain other records. |
@@ -126,8 +125,7 @@ remain incomplete. Closing those gaps is the first Proof B readiness task.
 
 **Does this replay rerun AutoDock Vina?** No. It replays the frozen record
 content into a new local Witness database and checks the public API and graph
-relationship. Re-executing docking requires the missing sealed input/output
-package and a documented environment.
+relationship. Re-executing docking requires a sealed execution environment and independently sourced inputs; the historical byte package is now committed.
 
 **Does `r = 0.885` validate CDK2 binding or a drug candidate?** No. It describes
 agreement between the two specified docking score vectors. It makes no claim
@@ -154,3 +152,16 @@ owner, and an external reproduction path.
 - What inputs, software digests, environment metadata, and review gates must a
   portable Proof B package include?
 - What would falsify or narrow the local reproducibility claim?
+
+## Score reanalysis and regression checks
+
+These commands reanalyse the committed scores, without executing docking. This locked analysis environment is tested on Python 3.12; record replay itself needs only standard-library Python 3.9+. Use Python 3.12 for the pinned NumPy environment:
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements-review.txt
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python src/compute-broker/scripts/validate_consensus.py --job-id EXP-001 --results-dir proofs/EXP-001-v1/outputs/vina --output /tmp/humanity-grid-consensus.json
+```
+
+Use one replay process at a time against a disposable database. Writes are sequential, not an atomic batch: if a later write fails, earlier accepted records remain and can be checked on retry. Matching labels alone never authorize reuse; payloads and provenance must also agree. Requests are bounded, have timeouts, and reject redirects and remote API destinations.

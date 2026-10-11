@@ -57,3 +57,9 @@ validation/data/
 validation/output/prep/1KE7.pdbqt
 *_docked.pdbqt
 *.smi
+
+# The frozen proof includes manifested source SMILES and docking poses.
+!proofs/EXP-001-v1/**/*.smi
+!proofs/EXP-001-v1/**/*_docked.pdbqt
+
+.venv312/

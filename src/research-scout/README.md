@@ -1,8 +1,10 @@
-# Research Scout
+> **Pre-alpha component:** this document includes planned behavior. This component is not part of an installed, verified volunteer platform. Start with the repository root and the supported local Proof A reviewer path; do not infer scientific validity, deployed services, or independent execution from these design descriptions.
+
+# Research Scout: proposed hypothesis workflow
 
 **AI-powered literature ingestion, citation graph construction, and hypothesis generation for scientific discovery.**
 
-## Responsibilities
+## Planned responsibilities
 
 - Ingest scientific literature from PubMed, bioRxiv, arXiv, patents
 - Build and maintain citation graph
@@ -55,7 +57,7 @@
 }
 ```
 
-## Architecture
+## Proposed architecture
 
 ```
 research-scout/
@@ -88,12 +90,14 @@ research-scout/
     └── generate_hypotheses.py
 ```
 
-## Quick Start
+## Supported review entry point
 
-```bash
-cd src/research-scout
-uv pip install -e .
-python -m research_scout.ingest.pubmed --query "KRAS G12C" --max-results 100
-python -m research_scout.graph.build --input data/papers.jsonl
-python -m research_scout.hypothesis.generate --graph data/citation_graph.parquet
-```
+The former quick-start examples described future modules or unverified container
+paths. They are not supported installation instructions and are intentionally
+omitted here. No portal, model pipeline, or production container is released
+through this component document.
+
+Start with the [local Proof A reviewer workflow](../../docs/PROOF_A_REVIEW.md)
+and the [frozen artifact package](../../proofs/EXP-001-v1/README.md). Those checks
+do not run new experiments, invoke a model, publish data, or establish scientific
+validity. The design above is a proposal for implementation and separate review.

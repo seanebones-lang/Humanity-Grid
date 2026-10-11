@@ -7,47 +7,8 @@ interface ProjectStoriesProps {
   contributions: ContributionStats | null
 }
 
-const mockStories: ProjectStory[] = [
-  {
-    project_id: 'H-9182',
-    title: 'KRAS G12C Covalent Inhibitor Discovery',
-    description: 'Virtual screening of 42M approved drug compounds against the KRAS G12C pocket to find repurposing candidates for pancreatic and lung cancers.',
-    your_contribution: 'Your computer screened 18,421 molecules over 47 hours, helping identify 7 high-confidence candidates now in lab validation.',
-    molecules_screened: 18421,
-    hours_donated: 47.3,
-    status: 'Lab validation in progress'
-  },
-  {
-    project_id: 'H-8847',
-    title: 'Alzheimer\'s Amyloid-Beta Aggregation Inhibitors',
-    description: 'Molecular dynamics simulations of 5,000 candidate molecules binding to amyloid-beta oligomers to prevent toxic aggregation.',
-    your_contribution: 'Contributed 23.1 hours of GPU compute across 3,241 simulation frames, helping rank the top 12 candidates for synthesis.',
-    molecules_screened: 3241,
-    hours_donated: 23.1,
-    status: 'Top 12 candidates synthesized'
-  },
-  {
-    project_id: 'H-9021',
-    title: 'Novel Beta-Lactamase Inhibitors for Antibiotic Resistance',
-    description: 'Consensus docking of 12M compounds against NDM-1 and OXA-48 carbapenemases to restore efficacy of last-resort antibiotics.',
-    your_contribution: 'Screened 12,890 compounds in 31 hours, contributing to the discovery of 3 novel scaffold families with sub-nM affinity.',
-    molecules_screened: 12890,
-    hours_donated: 31.0,
-    status: 'Pre-clinical studies planned'
-  },
-  {
-    project_id: 'H-8563',
-    title: 'Perovskite Solar Cell Stability Prediction',
-    description: 'ML-accelerated molecular dynamics of 2,000 perovskite compositions to predict degradation pathways and identify stable formulations.',
-    your_contribution: 'Ran 8,420 simulation hours across 420 compositions, helping identify 5 compositions with projected >25 year stability.',
-    molecules_screened: 8420,
-    hours_donated: 18.7,
-    status: 'Experimental validation underway'
-  }
-]
-
 export default function ProjectStories({ stories, contributions }: ProjectStoriesProps) {
-  const displayStories = stories.length > 0 ? stories : mockStories
+  const displayStories = stories
 
   return (
     <div className="space-y-6 animate-fade-in">

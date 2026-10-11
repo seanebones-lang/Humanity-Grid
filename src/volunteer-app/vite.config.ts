@@ -7,12 +7,12 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
   build: {
     target: 'es2022',
-    minify: 'esbuild',
+    minify: 'oxc',
   },
   server: {
     port: 1420,
