@@ -1,4 +1,4 @@
-# Locked reviewer environment (Python 3.9+); no docking or volunteer execution toolchain.
+# Locked reviewer environment (Python 3.12); no docking or volunteer execution toolchain.
 annotated-types==0.7.0
 numpy==2.0.2
 polars==1.36.1

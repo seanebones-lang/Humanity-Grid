@@ -155,10 +155,10 @@ owner, and an external reproduction path.
 
 ## Score reanalysis and regression checks
 
-These commands reanalyse the committed scores, without executing docking:
+These commands reanalyse the committed scores, without executing docking. This locked analysis environment is tested on Python 3.12; record replay itself needs only standard-library Python 3.9+. Use Python 3.12 for the pinned NumPy environment:
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 .venv/bin/python -m pip install -r requirements-review.txt
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python src/compute-broker/scripts/validate_consensus.py --job-id EXP-001 --results-dir proofs/EXP-001-v1/outputs/vina --output /tmp/humanity-grid-consensus.json
