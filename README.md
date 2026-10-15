@@ -2,6 +2,8 @@
 
 # Humanity Grid
 
+Contributing with an agent? Read [AGENTS.md](AGENTS.md) for setup, local checks and project boundaries.
+
 **A pre-alpha toolkit for reviewing local computational experiments and preserving their evidence in Witness. The long-term goal is a public-benefit volunteer computing network.**
 
 > **Current review status:** Humanity Grid is pre-alpha. The supported scientific
