@@ -1,6 +1,7 @@
 """Use fictional docking results to check output isolation, not docking science."""
 
 import importlib.util
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -52,6 +53,14 @@ class ReplicatePreservationTests(unittest.TestCase):
             ):
                 self.assertEqual(self.invoke(root, 101), 1)
             self.assertFalse((root / "cdk2-wu-001/results.parquet").exists())
+
+    def test_success_can_print_to_a_legacy_windows_console(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with io.TextIOWrapper(io.BytesIO(), encoding="cp1252") as console:
+                with patch.object(sys, "stdout", console), patch.object(
+                    runner, "obabel_pdbqt", return_value=True
+                ), patch.object(runner, "run_vina", return_value=-7.0):
+                    self.assertEqual(self.invoke(Path(directory), 101), 0)
 
     def test_failed_process_does_not_accept_a_written_pose(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -43,8 +43,19 @@ class CorrectedPackageTests(unittest.TestCase):
                 "--job-id", "EXP-001", "--threshold", "0.8", "--results-dir",
                 str(V2 / "outputs/vina"), "--output", str(output),
             ], check=True, capture_output=True)
-            self.assertEqual(json.loads(output.read_text()),
-                             json.loads((V2 / "outputs/consensus.json").read_text()))
+            actual = json.loads(output.read_text())
+            expected = json.loads((V2 / "outputs/consensus.json").read_text())
+            # BLAS/architecture can differ at the last few correlation bits.
+            # Keep package bytes exact; allow only bounded numeric reanalysis drift.
+            self.assertAlmostEqual(actual["summary"]["mean_correlation"],
+                                   expected["summary"]["mean_correlation"], delta=1e-14)
+            actual["summary"]["mean_correlation"] = expected["summary"]["mean_correlation"]
+            for computed, frozen in zip(actual["work_units"], expected["work_units"]):
+                self.assertEqual(set(computed["correlations"]), set(frozen["correlations"]))
+                for pair, correlation in frozen["correlations"].items():
+                    self.assertAlmostEqual(computed["correlations"][pair], correlation, delta=1e-14)
+                    computed["correlations"][pair] = correlation
+            self.assertEqual(actual, expected)
 
 
 if __name__ == "__main__":

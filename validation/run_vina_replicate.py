@@ -138,7 +138,9 @@ def main() -> int:
     df = pl.DataFrame(rows)
     df.write_parquet(out / "results.parquet")
     print(f"Wrote {len(df)} results -> {out / 'results.parquet'}")
-    print(df)
+    # Avoid Unicode box drawing that fails on Windows' legacy console encoding.
+    for row in df.iter_rows(named=True):
+        print(row)
     return 0
 
 
