@@ -1,5 +1,12 @@
 # CDK2 Validation — Real End-to-End Record (EXP-001)
 
+> Historical run narrative. The original `proof-a-v1` tag is preserved and has
+> known package-completeness and outlier-description defects documented in
+> [the review correction](PROOF_A_CORRECTIONS.md). Use the separately versioned
+> [v2 review package](../proofs/EXP-001-v2/README.md) for offline inspection.
+> The recipe below was corrected to preserve each seed in its own directory;
+> that correction has not been validated by a fresh molecular-docking run.
+
 **Date**: 2026-09-16
 **Pipeline**: AutoDock Vina (CPU) -> redundant replicates -> consensus -> Grid→Witness bridge
 
@@ -55,11 +62,19 @@ identical jobs independently).
 - Pearson correlation rep1 vs rep2: **r = 0.885**
 - Threshold: r ≥ 0.80
 - Outcome: **PASSED** (1/1 work units)
-- Outliers flagged (IQR): 1 (CHEMBL495686, the largest rep1↔rep2 spread)
+- The historical frozen report counted one outlier but did not record the
+  variable or compound. Its original single-run score IQR rule flags
+  `CHEMBL2106406`, not `CHEMBL495686`.
+- Current reanalysis instead applies IQR to absolute between-run score
+  differences and flags `CHEMBL495686` (delta `0.570 kcal/mol`). These are
+  different statistics; v2 preserves the old report and records the new rule,
+  fences and compound separately. Neither outlier rule determines the Pearson
+  agreement pass/fail result.
 
-**The disagreement rule works.** Scores agree within tolerance, consensus is
-accepted, and the one outlying compound is flagged rather than silently
-folded in. Had r < 0.80, the work unit would be re-queued (or fail loud).
+The archived score vectors meet the local correlation threshold. The outlier
+is a diagnostic label and remains in the correlation calculation. This is a
+score reanalysis, not fresh execution or evidence that a production queue
+automatically retries failed work.
 
 ---
 
@@ -126,19 +141,18 @@ verified end to end.
 # 1. Prepare rigid receptor
 python3 validation/rigidify.py validation/output/prep/1KE7.pdbqt validation/output/prep/1KE7_rigid.pdbqt
 
-# 2. Run two replicates inside the container (openbabel + vina + rdkit + polars)
-for rep in 101 202; do
+# 2. Run two replicates inside a prepared container (openbabel + vina + polars).
+# Use a NEW results root; the runner refuses an existing work-unit directory.
+# Resolve and record the image digest/tool versions separately before execution.
+for rep in 1 2; do
+  seed=$((rep * 101))
   docker run --rm --user root -v "$PWD/validation:/work" -w /work \
     humanity-grid/autodock-gpu:val-1 \
-    bash -lc "apt-get update >/dev/null 2>&1 && apt-get install -y openbabel >/dev/null 2>&1 && \
-      python3 run_vina_replicate.py --receptor /work/output/prep/1KE7_rigid.pdbqt \
-        --out /work/output/results --work-unit-id cdk2-wu-001 \
-        --exhaustiveness 8 --seed $rep"
+    python3 run_vina_replicate.py --receptor /work/output/prep/1KE7_rigid.pdbqt \
+      --out "/work/output/results/rep$rep" --work-unit-id cdk2-wu-001 \
+      --exhaustiveness 8 --seed "$seed" || exit 1
 done
-# shuffle into rep1/ rep2/
-mkdir -p validation/output/results/rep1 validation/output/results/rep2
-cp -r validation/output/results/cdk2-wu-001 validation/output/results/rep1/
-cp -r validation/output/results/cdk2-wu-001 validation/output/results/rep2/
+# Outputs are already separate; never copy a shared final directory into both.
 
 # 3. Consensus
 uv run --python /tmp/gridvenv/bin/python src/compute-broker/scripts/validate_consensus.py \

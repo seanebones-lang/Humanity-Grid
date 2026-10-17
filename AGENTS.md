@@ -13,6 +13,7 @@ From the root, with Python 3.9 or later:
 
 ```sh
 python3 proofs/EXP-001-v1/tools/verify.py
+python3 proofs/EXP-001-v2/tools/verify.py
 python3 ingest_exp001.py --help
 ```
 
@@ -20,6 +21,11 @@ The verifier checks manifested byte lengths/digests and frozen consensus/Witness
 record relationships. It does not rerun docking, establish source identity or
 prove biological activity. A missing artifact is a failure to report, never an
 invitation to invent replacement historical evidence.
+
+The original `proof-a-v1` tag is incomplete; current main and the separately
+versioned v2 review package contain the exact archived files. Read
+[the correction record](docs/PROOF_A_CORRECTIONS.md) before claiming that an
+older review target passed. V2 score reanalysis is not a new docking run.
 
 For the fuller reviewer checks use Python 3.12 in a disposable virtual environment:
 

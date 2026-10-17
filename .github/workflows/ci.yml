@@ -29,6 +29,7 @@ jobs:
       - name: Installed model package outside checkout
         run: cd /tmp && python -c "from experiment_engine.jobs.spec import JobSpec; print(JobSpec.__name__)"
       - run: python proofs/EXP-001-v1/tools/verify.py
+      - run: python proofs/EXP-001-v2/tools/verify.py
       - run: python -m unittest discover -s tests -v
       - run: python src/compute-broker/scripts/validate_consensus.py --job-id EXP-001 --results-dir proofs/EXP-001-v1/outputs/vina --output /tmp/consensus.json
       - run: python ingest_exp001.py --help

@@ -1,4 +1,8 @@
 # Portable source files use LF; frozen evidence retains its exact original bytes.
 * text=auto eol=lf
 proofs/EXP-001-v1/** -text
+proofs/EXP-001-v2/** -text
+# Fixed-column source/pose files retain significant original whitespace.
+proofs/EXP-001-v2/**/*.pdb -diff
+proofs/EXP-001-v2/**/*.pdbqt -diff
 validation/output/** -text

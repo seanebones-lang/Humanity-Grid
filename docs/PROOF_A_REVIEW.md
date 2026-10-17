@@ -3,6 +3,12 @@
 **Status:** frozen local infrastructure demonstration, not an independently
 reviewed scientific result.
 
+**Review correction:** Use the [version 2 package](../proofs/EXP-001-v2/README.md)
+and [correction record](PROOF_A_CORRECTIONS.md). The original `proof-a-v1` tag
+is retained with its known defects. V2 restores the complete review target,
+distinguishes score outliers from difference outliers, and documents the safer
+seed-specific rerun path. It is not a new molecular-docking experiment.
+
 Proof A exercises the boundary between the three systems:
 
 1. Research Scout proposes a hypothesis and it remains **Generated**.
@@ -26,7 +32,8 @@ reproduction.
 | Runs | Seeds `101` and `202` |
 | Agreement statistic | Pearson `r = 0.8849788400337059` |
 | Rule | Predeclared local agreement threshold `r >= 0.80` |
-| Disagreement | `CHEMBL495686`, absolute delta `0.570`; flagged by IQR rule |
+| Current difference reanalysis | `CHEMBL495686`, absolute delta `0.570`; IQR of between-run absolute differences |
+| Historical single-run score outlier | `CHEMBL2106406`; different variable from the difference reanalysis |
 | Witness graph | 12 Observed, 2 Inferred, 1 Generated |
 
 The claim is only that these two specified runs agree under this statistic and

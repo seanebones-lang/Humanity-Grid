@@ -1,0 +1,50 @@
+{
+  "scope": "Reanalysis of original frozen score vectors, no new docking or Witness replay",
+  "original_validator_variable": "replicate-1 affinity_kcal_mol",
+  "historical_score_iqr": {
+    "variable": "affinity_kcal_mol",
+    "replicate": 1,
+    "unit": "kcal/mol",
+    "factor": 1.5,
+    "quantile_interpolation": "linear",
+    "q1": -7.002,
+    "q3": -6.6587499999999995,
+    "lower_fence": -7.516875000000001,
+    "upper_fence": -6.1438749999999995,
+    "flagged_compounds": [
+      {
+        "compound_id": "CHEMBL2106406",
+        "affinity_kcal_mol": -7.847
+      }
+    ]
+  },
+  "current_difference_iqr": {
+    "variable": "absolute_difference",
+    "unit": "kcal/mol",
+    "method": "two-sided IQR fences; strict outside comparison",
+    "quantile_interpolation": "linear",
+    "factor": 1.5,
+    "q1": 0.013000000000000345,
+    "q3": 0.15549999999999953,
+    "lower_fence": -0.20074999999999843,
+    "upper_fence": 0.3692499999999983,
+    "flagged_compounds": [
+      {
+        "compound_id": "CHEMBL495686",
+        "absolute_difference": 0.5700000000000003
+      }
+    ]
+  },
+  "parquet_sources": [
+    {
+      "path": "outputs/vina/rep1/cdk2-wu-001/results.parquet",
+      "sha256": "c51eb23baebf55f67c2ce37a6222ee7141e6f2441de399343fad1323cb7693d8"
+    },
+    {
+      "path": "outputs/vina/rep2/cdk2-wu-001/results.parquet",
+      "sha256": "7ce9ac3c8354ec56101e8005394acd2aa26f22b7d898e2dd9980abcde5c58c23"
+    }
+  ],
+  "correlation_includes_all_six_compounds": true,
+  "witness_export": "Historical v1 export unchanged; not a new attestation of this reanalysis"
+}

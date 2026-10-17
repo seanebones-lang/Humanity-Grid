@@ -28,7 +28,10 @@ guide states exactly what the replay verifies, what it does not verify, how to
 inspect the result, and how to report a failure.
 
 The frozen local artifacts and Witness record snapshot are also available in the
-[checksummed EXP-001 Proof A package](proofs/EXP-001-v1/README.md).
+[checksummed EXP-001 Proof A v2 review package](proofs/EXP-001-v2/README.md).
+The [correction record](docs/PROOF_A_CORRECTIONS.md) distinguishes the unchanged
+historical evidence from current score reanalysis and preserves the original
+`proof-a-v1` tag, including its documented defects.
 
 Independent reviewers should use the [external review guide](docs/EXTERNAL_REVIEW.md).
 The current invitation is to inspect and criticize the frozen proof, then help

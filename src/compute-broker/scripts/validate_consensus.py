@@ -215,9 +215,28 @@ def main():
 
             correlations.extend(wu_report["correlations"].values())
             outlier_ids = set()
+            outlier_details = {}
             for i in range(redundancy):
                 for j in range(i + 1, redundancy):
                     flagged = difference_outliers(replicates[i], replicates[j])
+                    differences = flagged["absolute_difference"]
+                    q1 = differences.quantile(0.25, interpolation="linear")
+                    q3 = differences.quantile(0.75, interpolation="linear")
+                    iqr = q3 - q1
+                    outlier_details[f"rep{i + 1}_vs_rep{j + 1}"] = {
+                        "variable": "absolute_difference",
+                        "unit": "kcal/mol",
+                        "method": "two-sided IQR fences; strict outside comparison",
+                        "quantile_interpolation": "linear",
+                        "factor": 1.5,
+                        "q1": q1,
+                        "q3": q3,
+                        "lower_fence": q1 - 1.5 * iqr,
+                        "upper_fence": q3 + 1.5 * iqr,
+                        "flagged_compounds": flagged.filter(pl.col("is_outlier"))
+                        .select("compound_id", "absolute_difference")
+                        .to_dicts(),
+                    }
                     outlier_ids.update(
                         flagged.filter(pl.col("is_outlier"))["compound_id"].to_list()
                     )
@@ -226,6 +245,7 @@ def main():
             wu_report["outlier_basis"] = (
                 "IQR of absolute score differences for each replicate pair"
             )
+            wu_report["outlier_details"] = outlier_details
 
         except Exception as e:
             wu_report["passed"] = False
