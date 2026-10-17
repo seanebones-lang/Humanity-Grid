@@ -1,0 +1,46 @@
+{
+  "job_id": "EXP-001",
+  "redundancy": 2,
+  "threshold": 0.8,
+  "work_units": [
+    {
+      "work_unit_id": "cdk2-wu-001",
+      "replicates": 2,
+      "correlations": {
+        "rep1_vs_rep2": 0.8849788400337059
+      },
+      "passed": true,
+      "errors": [],
+      "outliers": 1,
+      "outlier_compounds": [
+        "CHEMBL495686"
+      ],
+      "outlier_basis": "IQR of absolute score differences for each replicate pair",
+      "outlier_details": {
+        "rep1_vs_rep2": {
+          "variable": "absolute_difference",
+          "unit": "kcal/mol",
+          "method": "two-sided IQR fences; strict outside comparison",
+          "quantile_interpolation": "linear",
+          "factor": 1.5,
+          "q1": 0.013000000000000345,
+          "q3": 0.15549999999999953,
+          "lower_fence": -0.20074999999999843,
+          "upper_fence": 0.3692499999999983,
+          "flagged_compounds": [
+            {
+              "compound_id": "CHEMBL495686",
+              "absolute_difference": 0.5700000000000003
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "mean_correlation": 0.8849788400337059
+  }
+}

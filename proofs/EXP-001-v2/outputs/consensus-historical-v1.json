@@ -1,0 +1,23 @@
+{
+  "job_id": "EXP-001",
+  "redundancy": 2,
+  "threshold": 0.8,
+  "work_units": [
+    {
+      "work_unit_id": "cdk2-wu-001",
+      "replicates": 2,
+      "correlations": {
+        "rep1_vs_rep2": 0.8849788400337059
+      },
+      "passed": true,
+      "errors": [],
+      "outliers": 1
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "mean_correlation": 0.8849788400337059
+  }
+}

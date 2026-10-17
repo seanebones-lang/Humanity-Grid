@@ -15,6 +15,7 @@ Output:
 from __future__ import annotations
 
 import argparse
+import math
 import subprocess
 import sys
 from pathlib import Path
@@ -65,7 +66,12 @@ def run_vina(receptor: Path, ligand: Path, docked: Path, exhaustiveness: int, se
         "--out", str(docked),
         "--verbosity", "1",
     ]
-    subprocess.run(cmd, capture_output=True, text=True)
+    # A failed process must never turn an older pose into a new result.
+    if docked.exists():
+        raise FileExistsError(f"Refusing to reuse existing docking output: {docked}")
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        return None
     # Vina writes:  REMARK VINA RESULT:    <affinity>   <rmsd>   <rmsd>
     if not docked.exists():
         return None
@@ -75,7 +81,8 @@ def run_vina(receptor: Path, ligand: Path, docked: Path, exhaustiveness: int, se
             toks = line.split()
             # toks: ['REMARK','VINA','RESULT:','-9.123',...]
             try:
-                return float(toks[3])
+                affinity = float(toks[3])
+                return affinity if math.isfinite(affinity) else None
             except (ValueError, IndexError):
                 return None
     return None
@@ -90,20 +97,30 @@ def main() -> int:
     p.add_argument("--seed", type=int, default=42)
     args = p.parse_args()
 
+    if (
+        not args.work_unit_id
+        or Path(args.work_unit_id).name != args.work_unit_id
+        or args.work_unit_id in {".", ".."}
+    ):
+        p.error("work-unit-id must be a single directory name")
     out = args.out / args.work_unit_id
-    out.mkdir(parents=True, exist_ok=True)
+    try:
+        out.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        print(f"ERROR: refusing to overwrite an existing work unit: {out}", file=sys.stderr)
+        return 1
 
     rows = []
     for name, smi in CDK2_ACTIVES.items():
         lig = out / f"{name}.pdbqt"
         if not obabel_pdbqt(smi, lig):
             print(f"  {name}: pdbqt prep failed", file=sys.stderr)
-            continue
+            return 1
         docked = out / f"{name}_docked.pdbqt"
         affinity = run_vina(Path(args.receptor), lig, docked, args.exhaustiveness, args.seed)
         if affinity is None:
-            # skip; keep the preprint's real results
-            continue
+            print(f"ERROR: {name}: docking failed; no complete score set written", file=sys.stderr)
+            return 1
         rows.append(
             {
                 "compound_id": name,
@@ -121,7 +138,9 @@ def main() -> int:
     df = pl.DataFrame(rows)
     df.write_parquet(out / "results.parquet")
     print(f"Wrote {len(df)} results -> {out / 'results.parquet'}")
-    print(df)
+    # Avoid Unicode box drawing that fails on Windows' legacy console encoding.
+    for row in df.iter_rows(named=True):
+        print(row)
     return 0
 
 
